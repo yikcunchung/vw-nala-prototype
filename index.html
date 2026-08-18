@@ -472,6 +472,14 @@ body {
   overflow: hidden; clip: rect(0,0,0,0); clip-path: inset(50%);
   border: 0; white-space: nowrap;
 }
+/* #nala-live sits inside the navy result panel and inherited the body's #1b2236,
+   so it was #1b2236 on #1b2236 — a 1:1 ratio. It is clipped to 1x1 and never
+   visually rendered, so no user was affected, but WAVE does not treat .sr-only as
+   hidden and reported a Contrast Error a BITV tester then has to dismiss by hand.
+   White is also simply more robust: if the clip ever broke, the text would be
+   legible rather than invisible. Scoped, not global — the other .sr-only spans sit
+   on the light background where the inherited navy is already correct. */
+#nala-live { color: var(--white); }
 
 /* SC 2.4.1 — skip link, visually hidden until focused */
 .skip-link {

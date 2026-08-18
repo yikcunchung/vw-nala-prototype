@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">
+<meta name="description" content="Find the estimated range of your Volkswagen ID. model for your driving conditions.">
+<title>Volkswagen NaLa — Private Vehicles</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── Fonts (shared with the sibling simulators) ── */
+@font-face { font-family:'VW Head'; src:url('../range-simulator/site-01/assets/fonts/vwhead-light.woff2') format('woff2'); font-weight:300; font-style:normal; font-display:swap; }
+@font-face { font-family:'VW Head'; src:url('../range-simulator/site-01/assets/fonts/vwhead-regular.woff2') format('woff2'); font-weight:400; font-style:normal; font-display:swap; }
+@font-face { font-family:'VW Head'; src:url('../range-simulator/site-01/assets/fonts/vwhead-bold.woff2') format('woff2'); font-weight:700; font-style:normal; font-display:swap; }
+@font-face { font-family:'VW Text'; src:url('../range-simulator/site-01/assets/fonts/vwtext-regular.woff2') format('woff2'); font-weight:400; font-style:normal; font-display:swap; }
+@font-face { font-family:'VW Text'; src:url('../range-simulator/site-01/assets/fonts/vwtext-bold.woff2') format('woff2'); font-weight:700; font-style:normal; font-display:swap; }
+
+/* ── Base tokens (copied from range-simulator/index.html) ── */
+:root {
+  --bg: rgba(246,245,242,1);
+  --white: #fff;
+  --navy: rgba(27,34,54,1);          /* digitalCobalt/90  #1b2236  content/primary */
+  --navy-dark: rgba(41,48,67,1);
+  --label-blue: rgba(0,30,80,1);     /* content/active on the mobile modes */
+  --border-light: rgba(208,209,213,1);
+  --border-input: rgba(110,116,126,1); /* CORRECTED — 4.32:1 on --bg. Figma ships
+                                          border/default #d0d1d5 (1.35:1) which
+                                          fails SC 1.4.11. Never use #a1a4ac. */
+  --muted: rgba(96,101,116,1);
+  --content-secondary: #d0d1d5;      /* only used on the #1b2236 panel → 10.4:1 */
+  --tooltip-bg: rgba(49,56,74,1);
+  --font-text: 'VW Text','Inter',-apple-system,sans-serif;
+  --font-head: 'VW Head','Inter',-apple-system,sans-serif;
+
+  /* NaLa dynamic tokens — resolved per breakpoint from Figma variable modes.
+     <768: typography/Headline/400 28, typography/Super/100 44,
+     spacing-dynamic/d0130 24, d0100 20, d0020 4 */
+  --topbar-h: 64px;
+  --nala-h3: 28px;         /* typography/Headline/400 (H3) */
+  --nala-super: 44px;      /* typography/Super/100 */
+  --nala-pad-block: 24px;  /* spacing dynamic/d0130 — Top vertical padding */
+  --nala-pad-panel: 20px;  /* spacing dynamic/d0100 — Bottom panel padding */
+  --nala-gap-info: 4px;    /* spacing dynamic/d0020 — label → info icon */
+}
+
+html {
+  /* SC 2.4.11 — reserve clearance for the fixed banner so a control scrolled
+     into view by the browser is never left underneath it. */
+  scroll-padding-top: calc(var(--topbar-h) + 16px);
+  scroll-padding-bottom: 24px;
+}
+
+body {
+  font-family: var(--font-text);
+  background: var(--bg);
+  color: var(--navy);
+  -webkit-font-smoothing: antialiased;
+  font-size: 16px;
+}
+
+/* ════════════════════════════
+   TOPBAR — copied from range-simulator/index.html
+   Changed: position sticky → fixed (the NaLa frames centre the component in
+   the full viewport height; a fixed banner + symmetric padding on <main>
+   reproduces that centre exactly without ever overlapping content).
+   Changed: cursor:pointer removed from .topbar-tab / .topbar-cta — these are
+   non-functional in the prototype, so they must not advertise as controls.
+════════════════════════════ */
+#topbar {
+  background: white;
+  border-bottom: 1px solid var(--border-light);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 8px 0;
+  height: var(--topbar-h);
+  width: 100%;
+  flex-shrink: 0;
+  position: fixed; top: 0; left: 0; right: 0; z-index: 10;
+  -webkit-font-smoothing: antialiased;
+  color: #293043;
+}
+
+.topbar-container {
+  display: flex; align-items: center; justify-content: space-between;
+  width: 100%;
+  padding: 0 4.16vw;
+  box-sizing: border-box;
+}
+
+.topbar-left { display: flex; align-items: center; gap: 20px; flex-shrink: 0; }
+.topbar-logo-col { display: flex; align-items: center; gap: 20px; min-height: 40px; flex-shrink: 0; }
+.topbar-logo-col svg { display: block; width: 32px; height: 32px; }
+
+.topbar-tabs-col { display: flex; align-items: center; min-height: 40px; }
+.topbar-tabs { display: flex; gap: 20px; align-items: center; flex-shrink: 0; }
+.topbar-tab {
+  display: flex; align-items: center; justify-content: center;
+  padding: 8px 0; flex-shrink: 0;
+  font-family: 'VW Text', 'Inter', -apple-system, sans-serif;
+  font-weight: 700; font-style: normal;
+  font-size: 16px; line-height: 1.2;
+  color: #293043; white-space: nowrap;
+  word-break: break-word;
+}
+@media (max-width: 959px) { .topbar-tab { display: none; } }
+
+.topbar-actions-col {
+  display: flex; flex-direction: column;
+  align-items: flex-end; justify-content: center;
+  min-height: 40px; flex-shrink: 0;
+}
+.topbar-actions { display: flex; gap: 16px; align-items: center; flex-shrink: 0; }
+@media (max-width: 959px) { .topbar-actions { gap: 12px; } }
+.topbar-dealer { display: flex; align-items: center; max-width: 150px; flex-shrink: 0; }
+.topbar-dealer-text {
+  font-family: 'VW Text', 'Inter', -apple-system, sans-serif;
+  font-weight: 400; font-style: normal;
+  font-size: 14px; line-height: 1.2;
+  color: #293043; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis;
+  flex: 1 0 0; min-width: 1px;
+}
+@media (max-width: 959px) { .topbar-dealer-text { display: none; } }
+.topbar-cta {
+  width: 32px; height: 32px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.topbar-cta svg { width: 24px; height: 24px; display: block; flex-shrink: 0; }
+
+/* range-simulator drops the bar to 56px below 440px */
+@media (max-width: 439px) {
+  :root { --topbar-h: 56px; }
+  #topbar { padding: 6px 0; }
+}
+
+/* ════════════════════════════
+   PAGE SHELL
+   min-height:100dvh + symmetric padding-block:var(--topbar-h) puts the centre
+   of the flex content box at exactly 50dvh — which is where every NaLa frame
+   places the component (instance y == (frameH − instanceH) / 2, verified on
+   all nine frames). padding-top also guarantees the fixed banner can never
+   cover it (SC 2.4.11) and padding-bottom gives tail clearance (SC 1.4.10).
+════════════════════════════ */
+#nala-main {
+  min-height: 100vh;
+  min-height: 100dvh;
+  /* Symmetric, so the centre stays at exactly 50dvh; +8 so the reserved space
+     strictly exceeds the fixed banner rather than merely equalling it. */
+  padding-block: calc(var(--topbar-h) + 8px);
+  padding-inline: calc(100vw / 12);   /* grid margin — instance is 10/12 of the frame */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* ════════════════════════════
+   NaLa / Private Vehicles
+════════════════════════════ */
+.nala {
+  position: relative;
+  width: 100%;
+  border-radius: 8px;              /* var(--200) on the component root */
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Top ── */
+.nala-top {
+  padding-block: var(--nala-pad-block);   /* spacing dynamic/d0130 */
+  width: 100%;
+}
+.nala-question {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;                              /* s0350 */
+  width: 100%;
+}
+.nala-headline {
+  font-family: var(--font-head);
+  font-weight: 700;
+  font-size: var(--nala-h3);
+  line-height: 1.2;
+  color: var(--navy);
+  width: 100%;
+  overflow-wrap: break-word;
+}
+
+/* TalkingSubheadline — flex-wrap gap 12 (s0200), items vertically centred */
+.nala-sentence {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  align-content: center;
+  width: 100%;
+}
+.nala-word {
+  font-family: var(--font-text);
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 1.5;                        /* Copy/200 (Main)/regular → 24px box */
+  color: var(--navy);
+  white-space: nowrap;
+}
+/* The 375 frame swaps in shorter copy so the sentence still fits four rows.
+   440 and up use the full string. */
+.nala-word-short { display: none; }
+@media (max-width: 400px) {
+  .nala-word-long  { display: none; }
+  .nala-word-short { display: inline; }
+}
+
+/* ── Floating-label select — pattern copied from range-simulator/index.html.
+   Only change: the chevron is inset 16px (Figma pads the select 16 and puts a
+   24px gap before the 32px chevron box) instead of the simulator's 8px, so the
+   control hugs to the exact Figma widths (209 / 156 / 128 / 126 px). ── */
+.fl-select { position: relative; overflow: visible; display: inline-block; vertical-align: middle; }
+
+.fl-select select {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  /* Figma pads 16 / 24-gap / 32-chevron / 16 inside a 1px INSIDE stroke. In CSS
+     the border sits outside the padding box, so 1px comes off each side to keep
+     the outer width at the designed 209/156/128/126 and still fit the value. */
+  padding: 20px 69px 0 15px;
+  font-family: var(--font-text); font-size: 16px;
+  font-weight: 400; color: rgba(0,14,38,1);
+  background: transparent;
+  border: 1px solid var(--border-input);
+  border-radius: 8px;
+  appearance: none;
+  cursor: pointer;
+  outline: none;
+  text-overflow: ellipsis;
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+}
+/* Selects without the floating label centre their single line in the 50px box */
+.fl-select--plain select { padding: 0 69px 0 15px; line-height: 48px; }
+
+/* Hover — exact Figma values, as in the simulators */
+.fl-select:hover select { border-color: rgba(153,127,103,1); color: rgba(115,62,1,1); }
+.fl-select:hover .fl-label { color: rgba(115,62,1,1); max-width:100%; white-space:normal; overflow-wrap:break-word; text-overflow:clip;}
+.fl-select:hover .fl-chevron svg path { fill: rgba(115,62,1,1); }
+
+.fl-label {
+  position: absolute; top: 6px; left: 16px;
+  font-family: var(--font-text); font-size: 12px; line-height: 18px;
+  font-weight: 400; color: var(--label-blue);
+  pointer-events: none;
+  overflow: hidden;  
+  
+  transition: color 0.15s;
+  z-index: 1; max-width:100%; white-space:normal; overflow-wrap:break-word; text-overflow:clip;}
+
+.fl-chevron {
+  position: absolute; right: 16px; top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  display: flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; z-index: 1;
+}
+.fl-chevron svg { display: block; width: 24px; height: 24px; }
+.fl-chevron svg path { transition: fill 0.15s; }
+
+/* The sizer is what gives the control its width: it mirrors the selected
+   option text, so the select hugs its value exactly like the Figma component
+   (16 left padding + text + 24 gap + 32 chevron + 16 right padding). */
+.fl-sizer {
+  display: block;
+  height: 50px;
+  padding: 0 72px 0 16px;
+  font-family: var(--font-text); font-size: 16px; font-weight: 400;
+  white-space: nowrap;
+  visibility: hidden;
+}
+.fl-sizer > span { display: block; }
+.fl-sizer .fl-sizer-sub { font-size: 12px; }
+
+/* ── Bottom panel ── */
+.nala-bottom {
+  background: var(--navy);                 /* digitalCobalt/90 */
+  border-radius: 12px;                     /* borderRadius/cardS */
+  padding: var(--nala-pad-panel);          /* spacing dynamic/d0100 */
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+/* The result/CTA + legal text row. The details disclosure sits beneath it as a
+   full-width row so that expanding it can never widen the hugging result
+   column past the panel. */
+.nala-bottom-row {
+  display: flex;
+  gap: 24px;
+  align-items: flex-end;
+  justify-content: center;
+  width: 100%;
+}
+.nala-result-cta {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;                               /* s0350 */
+  align-items: center;
+  flex: 1 0 0;
+  min-width: 0;
+}
+.nala-result { display: flex; flex-direction: column; align-items: center; }
+.nala-result-label {
+  display: flex;
+  gap: var(--nala-gap-info);               /* spacing dynamic/d0020 */
+  align-items: flex-start;
+  height: 24px;
+}
+.nala-result-label-text {
+  font-family: var(--font-text); font-weight: 700;
+  font-size: 16px; line-height: 1.2; color: var(--white);
+  white-space: nowrap;
+}
+.nala-value {
+  font-family: var(--font-head); font-weight: 700;
+  font-size: var(--nala-super); line-height: 1.2;
+  color: var(--white); white-space: nowrap;
+}
+
+/* Info button — .q-icon-btn pattern from range-simulator, recoloured for the
+   dark panel. The layout box is the Figma glyph box (23.803 x 24) so the Label
+   frame measures 142.8 exactly; ::before grows the hit area to 32x32 so the
+   target still clears SC 2.5.8 without disturbing the layout. */
+.q-icon-btn {
+  position: relative; display: inline-flex; align-items: center; justify-content: center;
+  width: 23.803px; height: 24px; border-radius: 50%;
+  color: var(--white); background: transparent; border: none; padding: 0;
+  cursor: pointer; flex-shrink: 0;
+  vertical-align: middle;
+  -webkit-tap-highlight-color: transparent;
+}
+/* SC 2.5.8: a 32x32 circle only inscribes a 22.6px square, so corner probes at
+   (+-12,+-12) landed on the siblings behind it and the button passed only via the
+   Spacing exception. 36px inscribes 25.5px, clearing 24x24 outright. Transparent, so
+   nothing moves and nothing is repainted; nearest other target is 86.8px away. */
+.q-icon-btn::before {
+  content: ''; position: absolute;
+  top: -6px; bottom: -6px; left: -6.1px; right: -6.1px;
+  border-radius: 50%;
+}
+.q-icon { width: 23.803px; height: 24px; display: block; pointer-events: none; }
+
+/* CTA — .cta-button from range-simulator, inverted for the dark panel */
+.nala-cta {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid var(--white); border-radius: 100px;
+  background: transparent; color: var(--white);
+  font-family: var(--font-text); font-size: 16px; font-weight: 400; line-height: 1.2;
+  /* Figma pads 12/32 and strokes *inside* the 44px frame; in CSS the 1px border
+     is added to the box, so the padding absorbs it and the control measures the
+     designed 44 x 142 exactly. */
+  padding: 11px 31px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 4px;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.nala-cta:hover {
+  background: var(--button-secondary-hover, #CCBDAB);
+  border-color: transparent;
+  color: var(--navy);
+}
+
+/* Consumption / CO₂ — content/secondary #d0d1d5 on #1b2236 = 10.4:1 */
+.nala-consumption {
+  display: none;
+  font-family: var(--font-text); font-weight: 400;
+  font-size: 16px; line-height: 1.2;
+  color: var(--content-secondary);
+  text-align: right;
+  white-space: pre-wrap;
+  flex: 0 0 456px;
+  width: 456px;
+}
+
+/* Details disclosure — carries the legally required consumption/CO₂ data at
+   every breakpoint, including the ones where the Figma panel omits it. */
+.nala-details {
+  margin-top: 24px;
+  background: var(--tooltip-bg);
+  border-radius: 8px;
+  padding: 16px;
+  font-family: var(--font-text); font-weight: 400;
+  font-size: 14px; line-height: 1.5;
+  color: var(--white);
+  text-align: left;
+}
+.nala-details p + p { margin-top: 8px; }
+.nala-details[hidden] { display: none; }
+@media (min-width: 1280px) { .nala-details-consumption { display: none; } }
+
+/* ── Media / Private Vehicle — absolute, right-aligned, vertically centred on
+   the component (Figma: right 0, centre + 1px). 30% of the component width,
+   aspect 640 : 321.6. Hidden below 1280 exactly as the Figma frames do. ── */
+.nala-media {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 50%;
+  margin-top: 1px;
+  transform: translateY(-50%);
+  width: 30%;
+  aspect-ratio: 640 / 321.6;
+  overflow: hidden;
+  pointer-events: none;
+}
+.nala-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* ════════════════════════════
+   BREAKPOINTS — Figma variable modes, verified against instance geometry
+   375/440  H3 28  Super 44  d0130 24  d0100 20  d0020 4   stacked
+   768      H3 32  Super 48  d0130 40  d0100 24  d0020 4   stacked
+   960      H3 34  Super 52  d0130 40  d0100 24  d0020 4   stacked
+   1280     H3 34  Super 52  d0130 40  d0100 24  d0020 4   split
+   1440     H3 34  Super 52  d0130 40  d0100 24  d0020 4   split
+   1600     H3 38  Super 56  d0130 52  d0100 28  d0020 8   split
+   1920     H3 38  Super 56  d0130 52  d0100 28  d0020 8   split
+   2560     H3 38  Super 56  d0130 52  d0100 28  d0020 8   split
+════════════════════════════ */
+@media (min-width: 768px) {
+  :root {
+    --nala-h3: 32px;
+    --nala-super: 48px;
+    --nala-pad-block: 40px;
+    --nala-pad-panel: 24px;
+  }
+}
+@media (min-width: 960px) {
+  :root { --nala-h3: 34px; --nala-super: 52px; }
+}
+/* ≥1280 — the component switches to the split variant: question at 70%,
+   vehicle render at 30%, result left-aligned, CTA hugs, legal text bottom-right */
+@media (min-width: 1280px) {
+  .nala-question { width: 70%; }
+  .nala-media    { display: block; }
+  .nala-bottom     { box-shadow: 0 2px 4px rgba(0,0,0,0.12); }  /* effect "Small", shadow/small */
+  .nala-bottom-row { justify-content: space-between; }
+  .nala-result-cta { align-items: flex-start; flex: 0 0 auto; }
+  .nala-result     { align-items: flex-start; }
+  .nala-cta        { width: auto; }
+  .nala-consumption { display: block; }
+}
+@media (min-width: 1600px) {
+  :root {
+    --nala-h3: 38px;
+    --nala-super: 56px;
+    --nala-pad-block: 52px;
+    --nala-pad-panel: 28px;
+    --nala-gap-info: 8px;
+  }
+}
+
+/* ════════════════════════════
+   a11y (WCAG 2.2 AA) — built in, not retrofitted
+════════════════════════════ */
+/* SC 2.4.7 — .fl-select select sets outline:none, so it must be replaced. */
+.fl-select select:focus-visible { outline: 2px solid var(--navy-dark); outline-offset: 2px; }
+/* On the #1b2236 panel a navy ring would be invisible — use white (15.8:1). */
+.nala-bottom .q-icon-btn:focus-visible,
+.nala-bottom .nala-cta:focus-visible { outline: 2px solid var(--white); outline-offset: 2px; }
+.skip-link:focus-visible { outline: 2px solid var(--white); outline-offset: -4px; }
+
+/* Visually hidden but exposed to AT — carries the live result text.
+   Never display:none, which would hide it from screen readers too. */
+.sr-only {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip: rect(0,0,0,0); clip-path: inset(50%);
+  border: 0; white-space: nowrap;
+}
+
+/* SC 2.4.1 — skip link, visually hidden until focused */
+.skip-link {
+  position: absolute; left: 8px; top: -48px; z-index: 9999;
+  background: #1B2236; color: #fff; padding: 8px 16px; border-radius: 0 0 8px 8px;
+  font-family: var(--font-text, sans-serif); font-size: 14px; text-decoration: none;
+  transition: top 0.15s;
+}
+.skip-link:focus { top: 0; }
+
+/* SC 2.3.3 — honour a reduced-motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+  .skip-link { transition: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ════ TOPBAR ════ -->
+<div id="topbar" role="banner">
+  <a class="skip-link" href="#nala-main">Skip to main content</a>
+  <div class="topbar-container">
+    <!-- Left group: Logo + Tabs -->
+    <div class="topbar-left">
+      <div class="topbar-logo-col">
+        <div style="width:32px;height:32px;flex-shrink:0;">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none" role="img" aria-label="Volkswagen" xmlns="http://www.w3.org/2000/svg">
+            <path d="M15.9998 0.666626C24.4877 0.666626 31.3336 7.51169 31.3337 15.9996C31.3337 24.4877 24.4879 31.3336 15.9998 31.3336C7.51181 31.3334 0.666748 24.4876 0.666748 15.9996C0.666923 7.5118 7.51192 0.6668 15.9998 0.666626ZM20.8738 26.8971C20.7643 27.1161 20.6544 27.2809 20.3806 27.2809C20.1071 27.2807 19.9979 27.116 19.8884 26.8971L16.1648 18.7379C16.11 18.6832 16.1093 18.5739 15.9998 18.5739C15.9451 18.5741 15.8903 18.6287 15.8357 18.7379L12.1667 26.8971C12.0572 27.1161 11.9474 27.2809 11.6736 27.2809C11.4 27.2808 11.2909 27.1161 11.1814 26.8971L3.29565 11.5641C2.80283 12.9878 2.52909 14.4664 2.52905 15.9996C2.52905 23.3924 8.60705 29.5258 15.9998 29.526C23.3926 29.526 29.4714 23.3925 29.5261 15.9996C29.5261 14.4117 29.2523 12.933 28.7595 11.5641L20.8738 26.8971ZM17.6433 14.6862C17.5338 14.905 17.4237 14.9596 17.2595 14.9596H14.741C14.5768 14.9596 14.4666 14.9049 14.3572 14.6862L9.48315 4.17151C7.45707 5.3215 5.70447 6.96481 4.49976 8.93616L11.4001 22.1881C11.4548 22.2429 11.4549 22.3521 11.5642 22.3522C11.6736 22.3522 11.6737 22.2429 11.7283 22.1881L14.3572 16.3834C14.4667 16.1644 14.5767 16.109 14.741 16.109H17.2595C17.4238 16.109 17.5338 16.1644 17.6433 16.3834L20.2712 22.1881C20.326 22.2429 20.3268 22.3522 20.4363 22.3522C20.4909 22.3519 20.5457 22.2973 20.6003 22.1881L27.4451 8.93616C26.2403 6.96473 24.4879 5.32151 22.4617 4.17151L17.6433 14.6862ZM15.9998 2.47424C14.4665 2.47428 12.9878 2.74802 11.6189 3.24084L15.8357 12.3307C15.8904 12.3854 15.8906 12.4945 15.9998 12.4948C16.1093 12.4948 16.11 12.3855 16.1648 12.3307L20.3806 3.24084C19.0116 2.74804 17.533 2.47424 15.9998 2.47424Z" fill="#293043"/>
+          </svg>
+        </div>
+      </div>
+      <!-- Tabs — static text in this prototype: no href, no handler, so they
+           are deliberately not exposed as controls and are not focusable. -->
+      <div class="topbar-tabs-col">
+        <div class="topbar-tabs">
+          <span class="topbar-tab">Menu</span>
+          <span class="topbar-tab">Models</span>
+          <span class="topbar-tab">Configure</span>
+          <span class="topbar-tab">Stock cars</span>
+        </div>
+      </div>
+    </div>
+    <!-- Actions — decorative in this prototype, hidden from AT -->
+    <div class="topbar-actions-col">
+      <div class="topbar-actions">
+        <div class="topbar-dealer">
+          <p class="topbar-dealer-text">Select dealer</p>
+          <div class="topbar-cta">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12.0002 0.961914C14.3662 0.96195 16.63 1.67121 18.3206 3.09082C20.0308 4.52704 21.093 6.64221 21.093 9.29102C21.093 10.7275 20.5566 12.2315 19.8274 13.623C19.0905 15.0293 18.1107 16.4049 17.1213 17.6064C16.1305 18.8098 15.1114 19.8615 14.2786 20.6191C13.864 20.9963 13.4826 21.3131 13.1643 21.542C13.0068 21.6552 12.8464 21.7607 12.6936 21.8418C12.5896 21.897 12.3202 22.0371 12.0002 22.0371C11.6766 22.0371 11.4053 21.8935 11.302 21.8379C11.149 21.7556 10.9887 21.6488 10.8313 21.5342C10.5132 21.3026 10.1314 20.9826 9.71704 20.6016C8.88492 19.8363 7.86617 18.7761 6.87622 17.5674C5.88774 16.3604 4.90939 14.9821 4.1731 13.582C3.44539 12.1982 2.9075 10.7053 2.90747 9.29102C2.90747 6.64221 3.96972 4.52704 5.67993 3.09082C7.37049 1.67129 9.63428 0.961914 12.0002 0.961914ZM12.0002 2.96191C10.0166 2.96191 8.23432 3.558 6.96606 4.62305C5.71742 5.67165 4.90747 7.22117 4.90747 9.29102C4.90751 10.2359 5.28052 11.3905 5.9436 12.6514C6.59819 13.896 7.49062 15.16 8.42407 16.2998C9.35607 17.4378 10.3105 18.43 11.0715 19.1299C11.4504 19.4783 11.7687 19.7429 12.0032 19.9141C12.2373 19.7452 12.5546 19.4838 12.9329 19.1396C13.6932 18.4479 14.6464 17.4666 15.5774 16.3359C16.51 15.2033 17.4019 13.9432 18.0559 12.6953C18.7175 11.4328 19.093 10.2639 19.093 9.29102C19.093 7.22127 18.283 5.67165 17.0344 4.62305C15.7662 3.55801 13.9838 2.96195 12.0002 2.96191ZM12.0002 5.98145C13.6627 5.98147 15.0236 7.32096 15.0237 8.98926C15.0237 10.6576 13.6627 11.997 12.0002 11.9971C10.3377 11.9971 8.97681 10.6576 8.97681 8.98926C8.97684 7.32095 10.3378 5.98145 12.0002 5.98145ZM12.0002 7.98145C11.4281 7.98145 10.9768 8.43972 10.9768 8.98926C10.9768 9.53882 11.428 9.99707 12.0002 9.99707C12.5724 9.99705 13.0237 9.53881 13.0237 8.98926C13.0236 8.43973 12.5724 7.98147 12.0002 7.98145Z" fill="#293043"/>
+            </svg>
+          </div>
+        </div>
+        <div class="topbar-cta">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+            <path d="M22.7715 21.6013L17.18 15.6221C18.4045 14.0058 19.0513 12.0254 19.017 9.99796C19.0555 8.80563 18.8491 7.61807 18.4105 6.50869C17.9719 5.39931 17.3103 4.3917 16.4668 3.54815C15.6232 2.70461 14.6156 2.04307 13.5062 1.60443C12.3969 1.16579 11.2093 0.959379 10.017 0.997955C8.82374 0.955887 7.63463 1.15991 6.52367 1.59731C5.4127 2.03472 4.40368 2.69614 3.55942 3.5404C2.71515 4.38467 2.05373 5.39369 1.61632 6.50465C1.17892 7.61562 0.9749 8.80473 1.01697 9.99796C0.973574 11.1915 1.17668 12.3812 1.61362 13.4928C2.05056 14.6044 2.71194 15.6139 3.55647 16.4585C4.40101 17.303 5.41057 17.9644 6.52214 18.4013C7.6337 18.8382 8.8234 19.0414 10.017 18.998C12.1035 19.0237 14.1365 18.338 15.7811 17.0537L21.3102 22.9665L22.7715 21.6013ZM10.0173 16.998C9.08657 17.0411 8.15711 16.8895 7.28832 16.553C6.41952 16.2164 5.6305 15.7023 4.97169 15.0435C4.31288 14.3847 3.79878 13.5957 3.46225 12.7269C3.12572 11.8581 2.97416 10.9287 3.01727 9.99796C2.97416 9.06726 3.12572 8.1378 3.46225 7.269C3.79878 6.40021 4.31288 5.61119 4.97169 4.95238C5.6305 4.29357 6.41952 3.77947 7.28832 3.44293C8.15711 3.1064 9.08657 2.95485 10.0173 2.99796C10.948 2.95485 11.8774 3.1064 12.7462 3.44293C13.615 3.77947 14.404 4.29357 15.0628 4.95238C15.7217 5.61119 16.2358 6.40021 16.5723 7.269C16.9088 8.1378 17.0604 9.06726 17.0173 9.99796C17.0604 10.9287 16.9088 11.8581 16.5723 12.7269C16.2358 13.5957 15.7217 14.3848 15.0629 15.0436C14.4041 15.7024 13.615 16.2165 12.7462 16.553C11.8774 16.8895 10.948 17.0411 10.0173 16.998V16.998Z" fill="#293043"/>
+          </svg>
+        </div>
+        <div class="topbar-cta">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+            <path d="M11.9996 0.999756C18.3736 0.999756 22.9996 5.62576 22.9996 11.9998C22.9996 18.3738 18.3736 22.9998 11.9996 22.9998C5.62563 22.9998 0.999634 18.3738 0.999634 11.9998C0.999634 5.62576 5.62563 0.999756 11.9996 0.999756ZM11.9996 2.99976C6.70163 2.99976 2.99963 6.70076 2.99963 11.9998C2.99963 13.8766 3.4714 15.5475 4.30725 16.9294C5.04526 15.7615 6.5176 15.1295 8.29358 14.3835L8.93616 14.1121L9.71936 15.9519L9.06897 16.2273C7.05497 17.0723 5.99674 17.5542 5.82874 18.3992C5.80678 18.505 5.78818 18.6107 5.76721 18.7156C7.33721 20.1576 9.48563 20.9998 11.9996 20.9998C14.5136 20.9998 16.6621 20.1585 18.2321 18.7175C18.2111 18.6107 18.1925 18.506 18.1705 18.3992C18.0025 17.5552 16.9443 17.0733 14.9313 16.2273L14.2789 15.9519L15.0612 14.1121L15.7057 14.3835C17.4826 15.1295 18.954 15.7615 19.693 16.9304C20.5278 15.5475 20.9996 13.8766 20.9996 11.9998C20.9996 6.70076 17.2986 2.99976 11.9996 2.99976ZM11.9996 4.99976C14.5646 4.99976 16.4995 6.93486 16.4996 9.49976C16.4996 12.0648 14.5646 13.9998 11.9996 13.9998C9.43483 13.9996 7.49963 12.0646 7.49963 9.49976C7.49973 6.93499 9.4349 4.99996 11.9996 4.99976ZM11.9996 6.99976C10.5279 6.99994 9.49973 8.028 9.49963 9.49976C9.49963 10.9716 10.5278 11.9996 11.9996 11.9998C13.4716 11.9998 14.4996 10.9718 14.4996 9.49976C14.4995 8.02786 13.4716 6.99976 11.9996 6.99976Z" fill="#293043"/>
+          </svg>
+        </div>
+        <div class="topbar-cta">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+            <path d="M9.7998 21C10.6282 21 11.2998 21.6716 11.2998 22.5C11.2998 23.3284 10.6282 24 9.7998 24C8.97149 23.9999 8.2998 23.3283 8.2998 22.5C8.2998 21.6717 8.97149 21.0001 9.7998 21ZM18.7998 21C19.6282 21 20.2998 21.6716 20.2998 22.5C20.2998 23.3284 19.6282 24 18.7998 24C17.9715 23.9999 17.2998 23.3283 17.2998 22.5C17.2998 21.6717 17.9715 21.0001 18.7998 21ZM4.7002 4H22.2998C22.6997 4 22.9999 4.39987 23 4.7998V4.90039L21.2002 14.4004C21.1001 14.7003 20.7999 15 20.5 15H7.09961L7.7998 18H20V20H6.2002L2.40039 3H0V1H4L4.7002 4ZM6.7002 13H19.4004L20.7002 6H5.09961L6.7002 13ZM10 11H8V8H10V11ZM14 11H12V8H14V11ZM18 11H16V8H18V11Z" fill="#293043"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ MAIN ════ -->
+<!-- tabindex="-1": Chrome and Firefox set the sequential-focus starting point on
+     fragment navigation so the skip link works without this, but some AT and older
+     engines move only the scroll position and leave the virtual cursor behind. -->
+<main id="nala-main" tabindex="-1">
+
+  <div class="nala" data-node-id="4065:4798">
+
+    <!-- ── Top ── -->
+    <div class="nala-top">
+      <div class="nala-question">
+        <h1 class="nala-headline" id="nala-headline">What is the range&nbsp;&hellip;</h1>
+
+        <div class="nala-sentence" role="group" aria-labelledby="nala-headline">
+
+          <span class="nala-word" id="nala-w1">of my</span>
+
+          <!-- Vehicle — floating label carries the model family, the value the variant -->
+          <span class="fl-select" id="nala-veh-wrap">
+            <span class="fl-sizer" aria-hidden="true">
+              <span class="fl-sizer-sub" id="nala-veh-sizer-sub">ID.7</span>
+              <span id="nala-veh-sizer">Pro Match 286 PS</span>
+            </span>
+            <span class="fl-label" id="nala-veh-family">ID.7</span>
+            <span class="sr-only" id="nala-veh-hint">variant</span>
+            <select id="nala-veh" aria-labelledby="nala-w1 nala-veh-family nala-veh-hint">
+              <optgroup label="ID.7">
+                <option value="pro" selected>Pro Match 286 PS</option>
+                <option value="pros">Pro S Match 286 PS</option>
+                <option value="gtx">GTX 4MOTION 340 PS</option>
+              </optgroup>
+            </select>
+            <span class="fl-chevron">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg"><g transform="translate(1.025 7.5715)"><path d="M10.975 11.427C10.525 11.427 10.102 11.249 9.786 10.927L0 0.93L0.95 0L10.735 9.996C10.865 10.127 11.084 10.128 11.215 9.995L20.999 0L21.95 0.93L12.165 10.926C11.848 11.25 11.425 11.427 10.975 11.427Z" fill="#293043"/></g></svg>
+            </span>
+          </span>
+
+          <span class="nala-word nala-word-long" id="nala-w2-long">when I mostly drive</span>
+          <span class="nala-word nala-word-short" id="nala-w2-short">when I drive</span>
+
+          <!-- Where -->
+          <span class="fl-select fl-select--plain">
+            <span class="fl-sizer" aria-hidden="true"><span id="nala-env-sizer">in the city</span></span>
+            <select id="nala-env" aria-label="when I mostly drive">
+              <option value="city" selected>in the city</option>
+              <option value="country">on country roads</option>
+              <option value="motorway">on the motorway</option>
+            </select>
+            <span class="fl-chevron">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg"><g transform="translate(1.025 7.5715)"><path d="M10.975 11.427C10.525 11.427 10.102 11.249 9.786 10.927L0 0.93L0.95 0L10.735 9.996C10.865 10.127 11.084 10.128 11.215 9.995L20.999 0L21.95 0.93L12.165 10.926C11.848 11.25 11.425 11.427 10.975 11.427Z" fill="#293043"/></g></svg>
+            </span>
+          </span>
+
+          <span class="nala-word" id="nala-w3">in</span>
+
+          <!-- Weather -->
+          <span class="fl-select fl-select--plain">
+            <span class="fl-sizer" aria-hidden="true"><span id="nala-wea-sizer">warm</span></span>
+            <span class="sr-only" id="nala-wea-hint">which weather</span>
+            <select id="nala-wea" aria-labelledby="nala-w3 nala-wea-hint">
+              <option value="warm" selected>warm</option>
+              <option value="mild">mild</option>
+              <option value="cold">cold</option>
+            </select>
+            <span class="fl-chevron">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg"><g transform="translate(1.025 7.5715)"><path d="M10.975 11.427C10.525 11.427 10.102 11.249 9.786 10.927L0 0.93L0.95 0L10.735 9.996C10.865 10.127 11.084 10.128 11.215 9.995L20.999 0L21.95 0.93L12.165 10.926C11.848 11.25 11.425 11.427 10.975 11.427Z" fill="#293043"/></g></svg>
+            </span>
+          </span>
+
+          <span class="nala-word" id="nala-w4">weather and I am driving</span>
+
+          <!-- Occupancy -->
+          <span class="fl-select fl-select--plain">
+            <span class="fl-sizer" aria-hidden="true"><span id="nala-occ-sizer">alone</span></span>
+            <select id="nala-occ" aria-labelledby="nala-w4">
+              <option value="alone" selected>alone</option>
+              <option value="pair">with a passenger</option>
+              <option value="family">with the family</option>
+            </select>
+            <span class="fl-chevron">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg"><g transform="translate(1.025 7.5715)"><path d="M10.975 11.427C10.525 11.427 10.102 11.249 9.786 10.927L0 0.93L0.95 0L10.735 9.996C10.865 10.127 11.084 10.128 11.215 9.995L20.999 0L21.95 0.93L12.165 10.926C11.848 11.25 11.425 11.427 10.975 11.427Z" fill="#293043"/></g></svg>
+            </span>
+          </span>
+
+          <span class="nala-word">?</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Bottom ── -->
+    <div class="nala-bottom">
+     <div class="nala-bottom-row">
+      <div class="nala-result-cta">
+        <div class="nala-result">
+          <div class="nala-result-label">
+            <span class="nala-result-label-text">Estimated range</span>
+            <button type="button" class="q-icon-btn" id="nala-info-btn"
+                    aria-expanded="false" aria-controls="nala-details"
+                    aria-label="More information about the estimated range">
+              <svg class="q-icon" viewBox="0 0 23.803 24" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg"><g transform="translate(0.9926 1.0008)"><path fill-rule="evenodd" clip-rule="evenodd" d="M10.9096 0C4.58799 0 0 4.626 0 11C0 17.374 4.58799 22 10.9096 22C17.2312 22 21.8192 17.374 21.8192 11C21.8192 4.626 17.2312 0 10.9096 0ZM10.9096 1.33C16.4666 1.33 20.5002 5.397 20.5002 11C20.5002 16.603 16.4666 20.67 10.9096 20.67C5.35265 20.67 1.31907 16.603 1.31907 11C1.31907 5.397 5.35265 1.33 10.9096 1.33ZM10.9096 5.493C11.348 5.493 11.6772 5.788 11.6772 6.304C11.6772 6.82 11.348 7.115 10.9096 7.115C10.4712 7.115 10.142 6.82 10.142 6.304C10.142 5.788 10.4712 5.493 10.9096 5.493ZM11.6862 14.656V9.007H8.34486V10.337H10.3671V14.656H7.35804V15.986L14.2678 15.985V14.655L11.6862 14.656Z" fill="white"/></g></svg>
+            </button>
+          </div>
+          <!-- The visible readout animates, so it is hidden from AT and the real
+               value is published in the clipped live region below it. -->
+          <p class="nala-value" id="nala-value" aria-hidden="true">600 km</p>
+          <p class="sr-only" id="nala-live" aria-live="polite">Estimated range 600 kilometres.</p>
+        </div>
+
+        <button type="button" class="nala-cta" id="nala-cta"
+                aria-expanded="false" aria-controls="nala-details">Learn more</button>
+      </div>
+
+      <p class="nala-consumption" id="nala-consumption">Energy consumption combined 16.6 - 15.2 kWh/100 km 4  &bull;CO&#8322; emissions combined 0 g/km 4  &bull;CO&#8322; class A</p>
+     </div><!-- /nala-bottom-row -->
+
+      <div class="nala-details" id="nala-details" hidden>
+        <p class="nala-details-consumption" id="nala-details-consumption">Energy consumption combined 16.6 - 15.2 kWh/100 km 4  &bull;CO&#8322; emissions combined 0 g/km 4  &bull;CO&#8322; class A</p>
+        <p>4 The stated range is an estimate calculated from the selections above and from WLTP test values. Actual range depends on driving style, route, payload, outside temperature, use of heating or air conditioning and the age and condition of the high-voltage battery.</p>
+      </div>
+    </div>
+
+    <!-- Media / Private Vehicle -->
+    <div class="nala-media">
+      <!-- SC 1.1.1: assets/ holds ONE render, so the alt must describe only what is
+           actually shown. It previously named the selected variant ("Pro S Match",
+           "GTX 4MOTION") over an unchanging Pro Match image, so the text alternative
+           asserted a vehicle the picture did not depict. In production, add one render
+           per variant and assign src and alt together — never alt alone. -->
+      <img src="assets/car-id7.png" alt="Volkswagen ID.7, front three-quarter view" id="nala-car">
+    </div>
+
+  </div>
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  var VEHICLES = {
+    /* No per-variant `alt` here on purpose — see the <img> comment above. One render
+       serves all three variants, so a variant-specific alt would be inaccurate. */
+    pro:  { family: 'ID.7', label: 'Pro Match 286 PS',   base: 600, consumption: '16.6 - 15.2' },
+    pros: { family: 'ID.7', label: 'Pro S Match 286 PS', base: 709, consumption: '15.9 - 14.7' },
+    gtx:  { family: 'ID.7', label: 'GTX 4MOTION 340 PS', base: 595, consumption: '17.9 - 16.4' }
+  };
+  var ENV     = { city: 1.00, country: 0.92, motorway: 0.74 };
+  var WEATHER = { warm: 1.00, mild: 0.95,    cold: 0.78 };
+  var OCC     = { alone: 1.00, pair: 0.97,   family: 0.93 };
+
+  var $ = function (id) { return document.getElementById(id); };
+
+  var veh = $('nala-veh'), env = $('nala-env'), wea = $('nala-wea'), occ = $('nala-occ');
+  var valueEl = $('nala-value'), liveEl = $('nala-live');
+  var consumptionEl = $('nala-consumption'), detailsConsumptionEl = $('nala-details-consumption');
+  var detailsEl = $('nala-details'), infoBtn = $('nala-info-btn'), ctaBtn = $('nala-cta');
+
+  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ── Keep each select hugging its selected value, exactly like the Figma
+        component (the sizer sets the wrapper width, the select overlays it). ── */
+  function syncSizer(select, sizerId) {
+    var sizer = $(sizerId);
+    if (!sizer || select.selectedIndex < 0) { return; }
+    sizer.textContent = select.options[select.selectedIndex].text;
+  }
+
+  /* ── The 375 frame uses shorter copy; keep the accessible name of the
+        environment select identical to whichever string is visible. ── */
+  function syncEnvLabel() {
+    var lng = $('nala-w2-long');
+    var visible = lng && window.getComputedStyle(lng).display !== 'none';
+    env.setAttribute('aria-label', visible ? 'when I mostly drive' : 'when I drive');
+  }
+
+  var animFrame = null;
+  function renderValue(target) {
+    if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
+    if (reduceMotion) { valueEl.textContent = target + ' km'; return; }
+    var start = parseInt(String(valueEl.textContent).replace(/[^0-9]/g, ''), 10);
+    if (isNaN(start)) { start = target; }
+    if (start === target) { valueEl.textContent = target + ' km'; return; }
+    var t0 = null, DUR = 500;
+    function step(ts) {
+      if (t0 === null) { t0 = ts; }
+      var p = Math.min(1, (ts - t0) / DUR);
+      var eased = 1 - Math.pow(1 - p, 3);
+      valueEl.textContent = Math.round(start + (target - start) * eased) + ' km';
+      if (p < 1) { animFrame = requestAnimationFrame(step); }
+      else { valueEl.textContent = target + ' km'; animFrame = null; }
+    }
+    animFrame = requestAnimationFrame(step);
+  }
+
+  function update() {
+    var v = VEHICLES[veh.value] || VEHICLES.pro;
+    var km = Math.round(v.base * (ENV[env.value] || 1) * (WEATHER[wea.value] || 1) * (OCC[occ.value] || 1));
+
+    renderValue(km);
+    liveEl.textContent = 'Estimated range ' + km + ' kilometres.';
+
+    var text = 'Energy consumption combined ' + v.consumption +
+               ' kWh/100 km 4  •CO₂ emissions combined 0 g/km 4  •CO₂ class A';
+    consumptionEl.textContent = text;
+    detailsConsumptionEl.textContent = text;
+
+    $('nala-veh-family').textContent = v.family;
+    $('nala-veh-sizer-sub').textContent = v.family;
+    /* The car image is NOT touched here. src never changes (one render), so rewriting
+       alt per variant would make the text alternative describe an image that is not
+       displayed — SC 1.1.1. Reinstate both together, or neither. */
+
+    syncSizer(veh, 'nala-veh-sizer');
+    syncSizer(env, 'nala-env-sizer');
+    syncSizer(wea, 'nala-wea-sizer');
+    syncSizer(occ, 'nala-occ-sizer');
+  }
+
+  /* ── Details disclosure: two triggers, one region, both kept in sync ── */
+  function setDetails(open) {
+    detailsEl.hidden = !open;
+    infoBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    ctaBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+  function toggleDetails() { setDetails(detailsEl.hidden); }
+
+  infoBtn.addEventListener('click', toggleDetails);
+  ctaBtn.addEventListener('click', toggleDetails);
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && !detailsEl.hidden) {
+      setDetails(false);
+      infoBtn.focus();
+    }
+  });
+
+  [veh, env, wea, occ].forEach(function (s) { s.addEventListener('change', update); });
+  window.addEventListener('resize', syncEnvLabel);
+
+  update();
+  syncEnvLabel();
+  /* First paint must not animate away from the designed 600 km. */
+  valueEl.textContent = valueEl.textContent;
+})();
+</script>
+</body>
+</html>

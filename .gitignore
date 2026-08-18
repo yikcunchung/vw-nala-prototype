@@ -12,3 +12,5 @@ cprof*/
 rprof*/
 xprof*/
 
+# local agent tooling config, not part of the prototype
+.claude/

@@ -192,14 +192,23 @@ criteria are not required and are not listed.
 |---|---|
 | **2.5.3** Label in Name | `#select-wea` reads "in `[warm ▾]` weather" and is named "in which weather". The sr-only word "which" sits between the two visible words, so the visible string is not contiguous in the name. Per-word it passes; a speech-input user saying "in weather" would not match. Either drop the sr-only word or move it to the end, as `#select-veh` already does ("of my ID.7 **variant**"). **Rule: append, never splice.** |
 
-**Tool runs: complete.**
+**Automated runs: complete.**
 - axe-core 4.13.0, **96 rules** (all nine default-disabled rules force-enabled, including `target-size`): **0 violations** across 5 viewports × 2 states, 0 JS exceptions.
-- **WAVE, run against the live deployment: 0 errors, 0 contrast errors, AIM score 10/10.** 1 alert ("Possible heading" on the bold *Estimated range* label — intentionally a label, not a heading).
-- The axe DevTools UI run is **subsumed**: the extension runs the same engine with *fewer* rules than the 96 above.
+- **WAVE hosted, against the live deployment: 0 errors, 0 contrast errors, AIM score 10/10.** 1 alert ("Possible heading" on the bold *Estimated range* label — intentionally a label, not a heading).
 
-**One thing no automated pass can close:** a screen-reader run. VoiceOver is planned; the protocol
-names **NVDA 2026.1.1.55980**, so record that as a deviation — a formal BITV audit naming NVDA will
-not accept VoiceOver evidence for that line item. See `a11y-2-automated-testing.md`.
+**Three manual runs remain.** Full protocol in `a11y-2-automated-testing.md` **§6**, checklist in
+**§7** — actions and grading are deliberately separated so the tester records what happened rather
+than judging in the moment.
+
+| Run | Status | Why it is still open |
+|---|---|---|
+| **VoiceOver** | outstanding | Announcement ≠ exposure. Two items need a human ear: whether the result readout's **duplicated "Estimated range"** is redundant or merely verbose, and whether the **virtual cursor escapes the dialog** — `VO`+arrow navigates the AX tree directly and `aria-modal` has historically leaked. |
+| **WAVE extension** | outstanding | The hosted run above is valid (this app does not lazy-build) but cannot open the dialog. The extension is the only way to score the **modal-open** state. |
+| **axe DevTools UI** | outstanding | Engine-equivalent to the CDP run and expected to agree, but the protocol names the UI. Set the standard to **WCAG 2.2 AA** — the extension may default to 2.1, which silently excludes `target-size`. |
+
+**NVDA 2026.1.1.55980 is the one real gap.** VoiceOver is planned instead; record that as a
+**deviation, not a substitution** — a formal BITV / EN 301 549 audit naming NVDA will not accept
+VoiceOver evidence for that line item.
 
 # Decisions an auditor could challenge
 

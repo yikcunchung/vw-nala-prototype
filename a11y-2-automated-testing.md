@@ -39,11 +39,11 @@ The local `index.html` and the deployed build are **byte-identical**.
 
 | Required | Status | Note |
 |---|---|---|
-| **axe DevTools 4.131.2** | ◐ **Equivalent, not identical** | This audit ran **axe-core 4.13.0**, the library the extension embeds, over CDP with no `runOnly` filter. The extension's build number is not the engine version. One run through the 4.131.2 UI is still worth doing to satisfy the protocol literally; expect agreement |
-| **WAVE Evaluation Tool 3.3.1.0** | ✅ **Done** | Real engine via `wave.webaim.org/report#/<url>` against the public URL |
+| **axe DevTools 4.131.2** | ◐ **Equivalent, not identical** | This audit ran **axe-core 4.13.0**, the library the extension embeds, over CDP with **no `runOnly` filter and all nine default-disabled rules force-enabled (96 rules)** — a superset of the extension's default scan. One run through the 4.131.2 UI is still worth doing to satisfy the protocol literally; expect agreement — §6 Run 3 |
+| **WAVE Evaluation Tool 3.3.1.0** | ◐ **Hosted done, extension outstanding** | Real engine via `wave.webaim.org/report#/<url>` against the public URL: **0 errors, 0 contrast errors, AIM 10/10**. Valid here — this app does not lazy-build, so hosted WAVE saw the real page. The **extension** run remains, and is the only way to reach the **modal-open** state — §6 Run 2 |
 | **Zoom 400% and 320 × 256 px** | ✅ **Done** | `320×256 @ deviceScaleFactor 4`. **dsf 1 is a small screen, not a zoomed one** |
 | **Operated via the keyboard** | ✅ **Done** | Driven with real `Input.dispatchKeyEvent` |
-| **NVDA 2026.1.1.55980** | ❌ **Not done** | The one real gap — §5 |
+| **NVDA 2026.1.1.55980** | ❌ **Not done** | The one real gap. Protocol in §6 Run 1, checklist in §7 |
 | **PAC 26.1.0.0** | ⚪ **Not applicable** | PAC checks PDF/UA-1 (ISO 14289-1). This app ships no PDFs (`*.pdf` count: 0). If brochures or price lists are added they are a separate surface under EN 301 549 clause 10 |
 
 ### NVDA vs VoiceOver — a deviation to record
@@ -233,9 +233,169 @@ labelled "button". Names must be read against what they describe.
 
 **SC 2.5.3 Label in Name has no axe rule.** It was checked by hand — see `a11y-1-criteria.md`.
 
+# 6. Manual testing — what to do
+
+Three runs remain, in this order: **VoiceOver**, **WAVE extension**, **axe DevTools UI**. NVDA is a
+fourth and is the one real gap (§1).
+
+**Actions only, in the order you perform them. Do not judge anything as you go** — write down what
+happened and grade it against **§7** afterwards. Judging in the moment is how "it seemed fine"
+becomes evidence.
+
+## Step 0 — before any tool, every single run
+
+1. Decide **live or local**, and be deliberate:
+   - **Live** — `https://yikcunchung.github.io/vw-nala-prototype/`. Use this if the evidence must
+     describe what ships. **Verify it is current first:**
+     `curl -s <url> | grep -c 'nala-range-modal'` → expect **≥ 4**. Pages lags a merge by 1–3 min.
+   - **Local** — `python3 -m http.server 7810` → `http://127.0.0.1:7810/nala/index.html`. Hosted
+     WAVE cannot reach localhost; the extension can.
+2. **Nothing here lazy-builds.** Unlike the Visualizer, this app has no `IntersectionObserver` gate
+   and no injected controls — the sentence and all four selects are in the served HTML. There is no
+   scroll-and-wait step, and no risk of auditing an empty shell.
+3. **Confirm on screen: four dropdowns in the sentence, one ⓘ button, one "Learn more" button.**
+4. **Write down:** browser + version, OS version, window size, date, live or local.
+
+## Run 1 — VoiceOver (macOS)
+
+Safari first, Chrome as a second opinion. `Cmd+F5` toggles VoiceOver. `VO` = `Ctrl+Option`.
+Move `VO+Right` / `VO+Left`, activate `VO+Space`, rotor `VO+U`.
+
+Do Step 0, then — **writing down the spoken words after each action:**
+
+1. `VO+Right` from the top until you have passed the whole sentence. Note what is said at each of
+   the four dropdowns.
+2. `Tab` to each dropdown in turn. Note the name **and** the value spoken.
+3. On `#select-wea`, note the exact utterance — this is the SC 2.5.3 evidence.
+4. Continue `VO+Right` into the dark result panel. **Note every string spoken, in order**, from the
+   words "Estimated range" through to the consumption line.
+5. Change any dropdown (`VO+Space`, arrow, `Return`). Note what is announced, and how many times.
+6. `Tab` to the ⓘ button. Press `Enter`.
+7. Note what is spoken **immediately** on open, in full.
+8. Press `VO+Right` repeatedly — at least eight times.
+9. Press `Escape`. Note what is spoken.
+10. Reopen with `Space` instead of `Enter`. Close with the × button. Then reopen and close by
+    clicking the dimmed area outside the panel. Note the spoken result each time.
+11. `VO+U` → **Form Controls**, arrow the whole list. Then switch the rotor to **Landmarks**.
+
+## Run 2 — WAVE 3.3.1.0
+
+The hosted run is already recorded in §2 (**0 errors, 0 contrast errors, AIM 10/10**). It is valid
+here — this app does not lazy-build, so hosted WAVE analysed the real page. The extension run adds
+one thing the hosted service cannot do: **the modal-open state.**
+
+1. Install the WAVE extension (Chrome or Firefox).
+2. Load the page. Do **Step 0**. Click the WAVE toolbar icon. Read **Errors**, **Contrast**,
+   **Alerts** — confirm they match the hosted numbers in §2.
+3. **Now the part only the extension can do.** Turn WAVE off, **open the ⓘ modal**, turn WAVE on
+   again. Read the three counts a second time.
+4. Note the `.sr-only` nodes. WAVE does not treat a 1×1 clip as hidden and may report contrast on
+   `#nala-live`, `#select-veh-hint` or `#select-wea-hint`. That is a **known artifact** — those are
+   clipped, never rendered, and `#nala-live` is explicitly `color: #fff` for this reason.
+
+> **Expect 1 alert, "Possible heading."** It is the bold *Estimated range* label. It is a label for
+> the readout, not a section heading. Not a defect — do not "fix" it into an `<h3>`.
+
+## Run 3 — axe DevTools
+
+1. Install the axe DevTools extension. DevTools → **axe DevTools** tab.
+2. **Note the version.** The protocol names **4.131.2**. A newer build is fine — rule sets only
+   grow — but **record the deviation** rather than leaving a reader to find the mismatch.
+3. Load the page. Do **Step 0**.
+4. ⚠️ **Set the standard to WCAG 2.2 AA.** The extension may default to **2.1 AA**, which excludes
+   every criterion 2.2 added — including **`target-size`, the SC 2.5.8 rule**. A clean 2.1 result is
+   real and says nothing about the six new criteria. This is the single most important step here.
+5. In rule settings, **enable the rules that are off by default**, `target-size` above all. If the
+   UI will not confirm which rules ran, record that — do not claim 2.5.8 was covered.
+6. **Scan all of my page.** Then **open the ⓘ modal and scan again.**
+7. Run the **Interactive Elements** guided test, then **Test #16 Target Size**.
+
+> **Guided-test zeros are not passes.** The Intelligent Guided Tests are semi-automated and must
+> each be launched by hand. An unrun test reports "Runs: 0, Total issues: 0", and the summary rolls
+> that up as "Guided Issues: 0" — which reads as a clean sheet to anyone skimming an export.
+
+> **What axe cannot tell you here, at any version:** the **SC 1.4.11 select-border failure** in §2.
+> axe's `color-contrast` rule implements SC 1.4.3 (text) only and axe-core ships **no rule for
+> 1.4.11 border contrast**. A clean axe DevTools run does not clear that criterion.
+
 ---
 
-# 6. Re-running the suite
+# 7. Verification checklist
+
+Tick only what you observed. **An untested box is not a pass.**
+
+## Run 1 — VoiceOver
+
+- [ ] **Step 1–2** — each of the four dropdowns is announced as a **pop-up button** with a name
+      *and* a value, not one or the other.
+- [ ] **Step 2** — the composed names read as sentence fragments, not word salad:
+
+      | Control | Expected name | Expected value |
+      |---|---|---|
+      | `#select-veh` | "of my ID.7 variant" | "Pro Match 286 PS" |
+      | `#select-env` | "when I mostly drive" | "in the city" |
+      | `#select-wea` | "in which weather" | "warm" |
+      | `#select-occ` | "weather and I am driving" | "alone" |
+
+- [ ] **Step 2** — `#select-occ` is named with the whole preceding clause. Record whether that is
+      merely odd or actively confusing. It is accurate and unique, so it passes either way.
+- [ ] **Step 3** — record the literal utterance for `#select-wea`. Expected: the sr-only word
+      *"which"* is spoken **between** the two visible words. This is the evidence for the one
+      recorded SC 2.5.3 decision in `a11y-1-criteria.md`.
+- [ ] **Step 4 — the one thing most likely to need a change.** Expected order is:
+
+      ```
+      "Estimated range"                   ← visible label
+      "More information …, button"        ← the ⓘ
+      "Estimated range 600 kilometres."   ← the sr-only live region
+      ```
+
+      so the phrase *"Estimated range"* is spoken **twice**. The visible `600 km` is
+      `aria-hidden="true"` because it animates and must not be counted out loud.
+      **Record whether that reads as redundant or merely verbose.** If it needs fixing, the remedy
+      is to leave `#nala-live` **empty at rest** and populate it only transiently, restoring
+      `#nala-value` to a readable node. **Do not apply that blind** — it trades a browse-mode
+      repetition for the risk that some readers drop a too-rapidly-repopulated region.
+- [ ] **Step 5** — exactly **one** announcement per change ("Estimated range 595 kilometres."),
+      focus stays on the dropdown, and the count-up is **never** read digit by digit.
+- [ ] **Step 7 — the reason focus is placed where it is.** Expected: *"Estimated range, dialog"*
+      **followed by the full explanatory paragraph.** Focus is put on the body copy, not the close
+      button, precisely because a reader announces a dialog's *name* on open but not its *content*.
+      A **skipped paragraph** is the failure this placement exists to prevent; the paragraph spoken
+      **twice** would mean an `aria-describedby` has been added (see `a11y-3` invariant B8).
+- [ ] **Step 8 — the check automation cannot make.** The virtual cursor must **never** reach the
+      page behind the dialog. `aria-modal="true"` plus `inert` blocks *focus*, but `VO`+arrow
+      navigates the AX tree directly and has historically escaped `aria-modal` containers. If it
+      escapes, record **which reader and which key** — `inert` is the mitigation and is already
+      applied.
+- [ ] **Steps 9–10** — all three dismissals (Escape, × button, click outside) close the dialog
+      **and** return focus to the ⓘ button, which is re-announced.
+- [ ] **Step 11** — Form Controls lists exactly the four dropdowns and the two buttons; Landmarks
+      lists a banner and a main.
+
+## Run 2 — WAVE
+
+- [ ] Default state matches the hosted figures in §2: **0 errors, 0 contrast errors, 1 alert**.
+- [ ] The single alert is **"Possible heading"** on the *Estimated range* label. Not a defect.
+- [ ] Modal-open state introduces **no new errors**.
+- [ ] Any `.sr-only` contrast report is dismissed as the known 1×1-clip artifact.
+
+## Run 3 — axe DevTools
+
+- [ ] The standard selector reads **WCAG 2.2 AA**, not 2.1.
+- [ ] `target-size` is confirmed **enabled** and appears in the results.
+- [ ] Default state: **0 violations**. Modal-open state: **0 violations**.
+- [ ] Extension version recorded, and any deviation from 4.131.2 noted.
+- [ ] It is recorded that this run **does not** cover the SC 1.4.11 select-border failure.
+
+## Recording the result
+
+**Write down the actual utterances and counts, not a pass/fail.** A tick against "announces
+correctly" is not evidence a BITV auditor can use; the transcript is.
+
+---
+
+# 8. Re-running the automated suite
 
 ```
 # 1. serve the build, then drive a real browser over CDP

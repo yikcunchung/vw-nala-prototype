@@ -346,7 +346,7 @@ Tick only what you observed. **An untested box is not a pass.**
       | `#select-veh` | "my car model variant" | "Pro Match 286 PS" |
       | `#select-env` | "driving location" | "in the city" |
       | `#select-wea` | "weather condition" | "warm" |
-      | `#select-occ` | "number of people in the car" | "alone" |
+      | `#select-occ` | "travelling" | "alone" |
 
 - [ ] **Step 2 — name stability.** Change all four values, then Tab back through them. **Every name
       must be unchanged.** The previous `aria-labelledby` scheme failed this: `#select-veh`'s name

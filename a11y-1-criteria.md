@@ -160,7 +160,7 @@ criteria are not required and are not listed.
 | SC | Name | Lvl | Relevant | Status | Evidence / what to do |
 |---|---|---|---|---|---|
 | **3.3.1** | Error Identification | A | No | ⚪ N/A | No input can be in error. Every control is a closed `<select>` with valid options only. |
-| **3.3.2** | Labels or Instructions | A | Yes | ✅ Pass | Every control carries a concise `aria-label` describing its purpose — *my car model variant*, *driving location*, *weather condition*, *number of people in the car*. The visible sentence supplies the same meaning to sighted users. |
+| **3.3.2** | Labels or Instructions | A | Yes | ✅ Pass | Every control carries a concise `aria-label` describing its purpose — *my car model variant*, *driving location*, *weather condition*, *travelling*. The visible sentence supplies the same meaning to sighted users. |
 | **3.3.3** | Error Suggestion | AA | No | ⚪ N/A | No validated input, so no error to suggest a correction for. |
 | **3.3.4** | Error Prevention (Legal, Financial, Data) | AA | No | ⚪ N/A | Nothing is submitted, purchased, or legally committed. The app computes an estimate and stores nothing. |
 | **3.3.7** | Redundant Entry | A | No | ⚪ N/A | No multi-step process re-asks for information. |
@@ -192,7 +192,7 @@ criteria are not required and are not listed.
 
 | SC | Decision |
 |---|---|
-| **2.5.3** Label in Name | The four selects carry concise `aria-label`s (*my car model variant*, *driving location*, *weather condition*, *number of people in the car*) that deliberately do **not** echo the surrounding sentence prose. This passes on the reading that the prose is *context* and the on-control text is the *value*, so no select has a visible **label** — the position already settled for the Visualizer's `#select-model-lg`. An auditor who instead treats a talking-sentence UI's prose as the label would fail all four. **Record the position; do not quietly re-stitch the names out of the visible words** — that is what made `#select-veh`'s name mutate with its value. |
+| **2.5.3** Label in Name | The four selects carry concise `aria-label`s (*my car model variant*, *driving location*, *weather condition*, *travelling*) that deliberately do **not** echo the surrounding sentence prose. This passes on the reading that the prose is *context* and the on-control text is the *value*, so no select has a visible **label** — the position already settled for the Visualizer's `#select-model-lg`. An auditor who instead treats a talking-sentence UI's prose as the label would fail all four. **Record the position; do not quietly re-stitch the names out of the visible words** — that is what made `#select-veh`'s name mutate with its value. |
 
 **Automated runs: complete.**
 - axe-core 4.13.0, **96 rules** (all nine default-disabled rules force-enabled, including `target-size`): **0 violations** across 5 viewports × 2 states, 0 JS exceptions.

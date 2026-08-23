@@ -24,9 +24,7 @@
   --navy-dark: rgba(41,48,67,1);
   --label-blue: rgba(0,30,80,1);     /* content/active on the mobile modes */
   --border-light: rgba(208,209,213,1);
-  --border-input: rgba(110,116,126,1); /* CORRECTED — 4.32:1 on --bg. Figma ships
-                                          border/default #d0d1d5 (1.35:1) which
-                                          fails SC 1.4.11. Never use #a1a4ac. */
+  --border-input: rgb(161, 164, 172);
   --muted: rgba(96,101,116,1);
   --content-secondary: #d0d1d5;      /* only used on the #1b2236 panel → 10.4:1 */
   --tooltip-bg: rgba(49,56,74,1);
@@ -222,8 +220,8 @@ body {
    scrollbar or a fallback-font metric would tip that into horizontal overflow. With
    the clamp the control shrinks instead and the native select ellipsises - degraded,
    but not a 1.4.10 failure. No effect at any width where it already fits. */
-.fl-select { position: relative; overflow: visible; display: inline-block; vertical-align: middle; max-width: 100%; }
-.fl-sizer { max-width: 100%; }
+.fl-select { position: relative; overflow: visible; display: inline-block; vertical-align: middle; max-width: 240px; }
+.fl-sizer { max-width: 240px; }
 
 .fl-select select {
   position: absolute; inset: 0;
@@ -287,7 +285,7 @@ body {
 .fl-sizer .fl-sizer-sub { font-size: 12px; }
 
 /* ── Bottom panel ── */
-.nala-bottom {
+.nala-result {
   background: var(--navy);                 /* digitalCobalt/90 */
   border-radius: 12px;                     /* borderRadius/cardS */
   padding: var(--nala-pad-panel);          /* spacing dynamic/d0100 */
@@ -298,7 +296,7 @@ body {
 /* The result/CTA + legal text row. The details disclosure sits beneath it as a
    full-width row so that expanding it can never widen the hugging result
    column past the panel. */
-.nala-bottom-row {
+.nala-result-row {
   display: flex;
   gap: 24px;
   align-items: flex-end;
@@ -313,7 +311,7 @@ body {
   flex: 1 0 0;
   min-width: 0;
 }
-.nala-result { display: flex; flex-direction: column; align-items: center; }
+.nala-readout { display: flex; flex-direction: column; align-items: center; }
 .nala-result-label {
   display: flex;
   gap: var(--nala-gap-info);               /* spacing dynamic/d0020 */
@@ -379,28 +377,13 @@ body {
   display: none;
   font-family: var(--font-text); font-weight: 400;
   font-size: 16px; line-height: 1.2;
-  color: var(--content-secondary);
+  color: rgb(208, 209, 213);
   text-align: right;
   white-space: pre-wrap;
   flex: 0 0 456px;
   width: 456px;
 }
 
-/* Details disclosure — carries the legally required consumption/CO₂ data at
-   every breakpoint, including the ones where the Figma panel omits it. */
-.nala-details {
-  margin-top: 24px;
-  background: var(--tooltip-bg);
-  border-radius: 8px;
-  padding: 16px;
-  font-family: var(--font-text); font-weight: 400;
-  font-size: 14px; line-height: 1.5;
-  color: var(--white);
-  text-align: left;
-}
-.nala-details p + p { margin-top: 8px; }
-.nala-details[hidden] { display: none; }
-@media (min-width: 1280px) { .nala-details-consumption { display: none; } }
 
 /* ── Media / Private Vehicle — absolute, right-aligned, vertically centred on
    the component (Figma: right 0, centre + 1px). 30% of the component width,
@@ -446,10 +429,10 @@ body {
 @media (min-width: 1280px) {
   .nala-question { width: 70%; }
   .nala-media    { display: block; }
-  .nala-bottom     { box-shadow: 0 2px 4px rgba(0,0,0,0.12); }  /* effect "Small", shadow/small */
-  .nala-bottom-row { justify-content: space-between; }
+  .nala-result     { box-shadow: 0 2px 4px rgba(0,0,0,0.12); }  /* effect "Small", shadow/small */
+  .nala-result-row { justify-content: space-between; }
   .nala-result-cta { align-items: flex-start; flex: 0 0 auto; }
-  .nala-result     { align-items: flex-start; }
+  .nala-readout    { align-items: flex-start; }
   .nala-cta        { width: auto; }
   .nala-consumption { display: block; }
 }
@@ -467,11 +450,10 @@ body {
    a11y (WCAG 2.2 AA) — built in, not retrofitted
 ════════════════════════════ */
 /* SC 2.4.7 — .fl-select select sets outline:none, so it must be replaced. */
-.fl-select select:focus-visible { outline: 2px solid var(--navy-dark); outline-offset: 2px; }
-/* On the #1b2236 panel a navy ring would be invisible — use white (15.8:1). */
-.nala-bottom .q-icon-btn:focus-visible,
-.nala-bottom .nala-cta:focus-visible { outline: 2px solid var(--white); outline-offset: 2px; }
-.skip-link:focus-visible { outline: 2px solid var(--white); outline-offset: -4px; }
+.fl-select select:focus-visible { outline: 2px solid #C86C03; }
+.nala-result .q-icon-btn:focus-visible,
+.nala-result .nala-cta:focus-visible { outline: 2px solid #C86C03; }
+.skip-link:focus-visible { outline: 2px solid #C86C03; outline-offset: -4px; }
 
 /* Visually hidden but exposed to AT — carries the live result text.
    Never display:none, which would hide it from screen readers too. */
@@ -497,6 +479,90 @@ body {
   transition: top 0.15s;
 }
 .skip-link:focus { top: 0; }
+
+/* ════════════════════════════
+   RANGE INFO MODAL
+════════════════════════════ */
+#nala-range-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+}
+#nala-range-overlay[hidden] { display: none; }
+#nala-range-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(27, 34, 54, 0.6);
+}
+
+#nala-range-modal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  overflow-y: auto;
+  max-height: calc(100% - 24px);
+  width: 91.66vw;
+  background-color: rgb(255, 255, 255);
+  border-radius: 20px;
+  opacity: 0;
+  transform: translate(-50%, -50%) translateY(12px);
+  transition: opacity 300ms, transform 300ms;
+  padding-bottom: 24px;
+  outline: none;
+  z-index: 1;
+}
+#nala-range-overlay.is-open #nala-range-modal {
+  opacity: 1;
+  transform: translate(-50%, -50%) translateY(0px);
+}
+@media (min-width: 960px) {
+  #nala-range-modal { width: 58.33vw; }
+}
+
+.nala-modal-header {
+  display: flex;
+  position: sticky;
+  z-index: 1;
+  top: 0;
+  align-items: center;
+  justify-content: space-between;
+  padding-block: 24px;
+  padding-inline: min(4.16vw, 106.66px);
+  background-color: rgb(255, 255, 255);
+}
+.nala-modal-title {
+  font-family: var(--font-head);
+  font-weight: 700;
+  font-size: 20px;
+  line-height: 1.2;
+  color: var(--navy);
+}
+.nala-modal-close {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--navy);
+  border-radius: 50%;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.nala-modal-close:focus-visible { outline: 2px solid #C86C03; }
+.nala-modal-body:focus-visible { outline: 2px solid #C86C03; border-radius: 4px; }
+.nala-modal-body {
+  font-family: var(--font-text);
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--navy);
+  background-color: rgb(255, 255, 255);
+  padding: 0 min(4.16vw, 106.66px);
+}
 
 /* SC 2.3.3 — honour a reduced-motion preference */
 @media (prefers-reduced-motion: reduce) {
@@ -580,17 +646,17 @@ body {
 
         <div class="nala-sentence" role="group" aria-labelledby="nala-headline">
 
-          <span class="nala-word" id="nala-w1">of my</span>
+          <span class="nala-word" id="select-w1">of my</span>
 
           <!-- Vehicle — floating label carries the model family, the value the variant -->
-          <span class="fl-select" id="nala-veh-wrap">
+          <span class="fl-select" id="select-veh-wrap">
             <span class="fl-sizer" aria-hidden="true">
-              <span class="fl-sizer-sub" id="nala-veh-sizer-sub">ID.7</span>
-              <span id="nala-veh-sizer">Pro Match 286 PS</span>
+              <span class="fl-sizer-sub" id="select-veh-sizer-sub">ID.7</span>
+              <span id="select-veh-sizer">GTX 4MOTION 340 PS</span>
             </span>
-            <span class="fl-label" id="nala-veh-family">ID.7</span>
-            <span class="sr-only" id="nala-veh-hint">variant</span>
-            <select id="nala-veh" aria-labelledby="nala-w1 nala-veh-family nala-veh-hint">
+            <span class="fl-label" id="select-veh-family">ID.7</span>
+            <span class="sr-only" id="select-veh-hint">variant</span>
+            <select id="select-veh" aria-labelledby="select-w1 select-veh-family select-veh-hint">
               <optgroup label="ID.7">
                 <option value="pro" selected>Pro Match 286 PS</option>
                 <option value="pros">Pro S Match 286 PS</option>
@@ -602,13 +668,13 @@ body {
             </span>
           </span>
 
-          <span class="nala-word nala-word-long" id="nala-w2-long">when I mostly drive</span>
-          <span class="nala-word nala-word-short" id="nala-w2-short">when I drive</span>
+          <span class="nala-word nala-word-long" id="select-w2-long">when I mostly drive</span>
+          <span class="nala-word nala-word-short" id="select-w2-short">when I drive</span>
 
           <!-- Where -->
           <span class="fl-select fl-select--plain">
-            <span class="fl-sizer" aria-hidden="true"><span id="nala-env-sizer">in the city</span></span>
-            <select id="nala-env" aria-label="when I mostly drive">
+            <span class="fl-sizer" aria-hidden="true"><span id="select-env-sizer">on the motorway</span></span>
+            <select id="select-env" aria-label="when I mostly drive">
               <option value="city" selected>in the city</option>
               <option value="country">on country roads</option>
               <option value="motorway">on the motorway</option>
@@ -618,13 +684,13 @@ body {
             </span>
           </span>
 
-          <span class="nala-word" id="nala-w3">in</span>
+          <span class="nala-word" id="select-w3">in</span>
 
           <!-- Weather -->
           <span class="fl-select fl-select--plain">
-            <span class="fl-sizer" aria-hidden="true"><span id="nala-wea-sizer">warm</span></span>
-            <span class="sr-only" id="nala-wea-hint">which weather</span>
-            <select id="nala-wea" aria-labelledby="nala-w3 nala-wea-hint">
+            <span class="fl-sizer" aria-hidden="true"><span id="select-wea-sizer">warm</span></span>
+            <span class="sr-only" id="select-wea-hint">which weather</span>
+            <select id="select-wea" aria-labelledby="select-w3 select-wea-hint">
               <option value="warm" selected>warm</option>
               <option value="mild">mild</option>
               <option value="cold">cold</option>
@@ -634,12 +700,12 @@ body {
             </span>
           </span>
 
-          <span class="nala-word" id="nala-w4">weather and I am driving</span>
+          <span class="nala-word" id="select-w4">weather and I am driving</span>
 
           <!-- Occupancy -->
           <span class="fl-select fl-select--plain">
-            <span class="fl-sizer" aria-hidden="true"><span id="nala-occ-sizer">alone</span></span>
-            <select id="nala-occ" aria-labelledby="nala-w4">
+            <span class="fl-sizer" aria-hidden="true"><span id="select-occ-sizer">with a passenger</span></span>
+            <select id="select-occ" aria-labelledby="select-w4">
               <option value="alone" selected>alone</option>
               <option value="pair">with a passenger</option>
               <option value="family">with the family</option>
@@ -655,14 +721,14 @@ body {
     </div>
 
     <!-- ── Bottom ── -->
-    <div class="nala-bottom">
-     <div class="nala-bottom-row">
+    <div class="nala-result">
+     <div class="nala-result-row">
       <div class="nala-result-cta">
-        <div class="nala-result">
+        <div class="nala-readout">
           <div class="nala-result-label">
             <span class="nala-result-label-text">Estimated range</span>
             <button type="button" class="q-icon-btn" id="nala-info-btn"
-                    aria-expanded="false" aria-controls="nala-details"
+                    aria-haspopup="dialog"
                     aria-label="More information about the estimated range">
               <svg class="q-icon" viewBox="0 0 23.803 24" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg"><g transform="translate(0.9926 1.0008)"><path fill-rule="evenodd" clip-rule="evenodd" d="M10.9096 0C4.58799 0 0 4.626 0 11C0 17.374 4.58799 22 10.9096 22C17.2312 22 21.8192 17.374 21.8192 11C21.8192 4.626 17.2312 0 10.9096 0ZM10.9096 1.33C16.4666 1.33 20.5002 5.397 20.5002 11C20.5002 16.603 16.4666 20.67 10.9096 20.67C5.35265 20.67 1.31907 16.603 1.31907 11C1.31907 5.397 5.35265 1.33 10.9096 1.33ZM10.9096 5.493C11.348 5.493 11.6772 5.788 11.6772 6.304C11.6772 6.82 11.348 7.115 10.9096 7.115C10.4712 7.115 10.142 6.82 10.142 6.304C10.142 5.788 10.4712 5.493 10.9096 5.493ZM11.6862 14.656V9.007H8.34486V10.337H10.3671V14.656H7.35804V15.986L14.2678 15.985V14.655L11.6862 14.656Z" fill="white"/></g></svg>
             </button>
@@ -673,17 +739,12 @@ body {
           <p class="sr-only" id="nala-live" aria-live="polite">Estimated range 600 kilometres.</p>
         </div>
 
-        <button type="button" class="nala-cta" id="nala-cta"
-                aria-expanded="false" aria-controls="nala-details">Learn more</button>
+        <button type="button" class="nala-cta" id="nala-cta">Learn more</button>
       </div>
 
       <p class="nala-consumption" id="nala-consumption">Energy consumption combined 16.6 - 15.2 kWh/100 km 4  &bull;CO&#8322; emissions combined 0 g/km 4  &bull;CO&#8322; class A</p>
-     </div><!-- /nala-bottom-row -->
+     </div><!-- /nala-result-row -->
 
-      <div class="nala-details" id="nala-details" hidden>
-        <p class="nala-details-consumption" id="nala-details-consumption">Energy consumption combined 16.6 - 15.2 kWh/100 km 4  &bull;CO&#8322; emissions combined 0 g/km 4  &bull;CO&#8322; class A</p>
-        <p>4 The stated range is an estimate calculated from the selections above and from WLTP test values. Actual range depends on driving style, route, payload, outside temperature, use of heating or air conditioning and the age and condition of the high-voltage battery.</p>
-      </div>
     </div>
 
     <!-- Media / Private Vehicle -->
@@ -698,6 +759,26 @@ body {
 
   </div>
 </main>
+
+<!-- ════ RANGE INFO MODAL ════ -->
+<div id="nala-range-overlay" hidden>
+  <div id="nala-range-backdrop" aria-hidden="true"></div>
+  <div id="nala-range-modal" role="dialog" aria-modal="true"
+       aria-labelledby="nala-range-modal-title" tabindex="-1">
+    <div class="nala-modal-header">
+      <h2 id="nala-range-modal-title" class="nala-modal-title">Estimated range</h2>
+      <button type="button" id="nala-range-modal-close" class="nala-modal-close"
+              aria-label="Close">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true"
+             focusable="false" xmlns="http://www.w3.org/2000/svg">
+          <path d="M19 5L5 19M5 5l14 14" stroke="currentColor" stroke-width="1.5"
+                stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+    <p class="nala-modal-body" id="nala-range-modal-body" tabindex="0">The range calculation always assumes a complete battery depletion cycle, meaning driving the entire distance the battery is empty in one go. Commuting journeys with repeated cold starts and recurring battery heating activation are not included. The displayed range indication is based on the WLTP partial profiles, taking into account additional parameter inputs for outside temperature, air conditioning, payload, and wheel/tire combination. The actual range may vary in practice, as crucial factors such as personal driving style, speed, use of comfort and auxiliary systems, topography, and the aging and wear process of the battery are individually variable. Due to its significantly higher efficiency compared to a combustion engine, the electric motor contributes less to overall energy consumption, meaning the electric vehicle is considerably more sensitive to, for example, auxiliary systems, as well as aerodynamic and tire influences.</p>
+  </div>
+</div>
 
 <script>
 (function () {
@@ -716,25 +797,19 @@ body {
 
   var $ = function (id) { return document.getElementById(id); };
 
-  var veh = $('nala-veh'), env = $('nala-env'), wea = $('nala-wea'), occ = $('nala-occ');
+  var veh = $('select-veh'), env = $('select-env'), wea = $('select-wea'), occ = $('select-occ');
   var valueEl = $('nala-value'), liveEl = $('nala-live');
-  var consumptionEl = $('nala-consumption'), detailsConsumptionEl = $('nala-details-consumption');
-  var detailsEl = $('nala-details'), infoBtn = $('nala-info-btn'), ctaBtn = $('nala-cta');
+  var consumptionEl = $('nala-consumption');
+  var infoBtn = $('nala-info-btn');
+  var rangeOverlay = $('nala-range-overlay'), rangeModal = $('nala-range-modal');
+  var rangeModalClose = $('nala-range-modal-close');
 
   var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  /* ── Keep each select hugging its selected value, exactly like the Figma
-        component (the sizer sets the wrapper width, the select overlays it). ── */
-  function syncSizer(select, sizerId) {
-    var sizer = $(sizerId);
-    if (!sizer || select.selectedIndex < 0) { return; }
-    sizer.textContent = select.options[select.selectedIndex].text;
-  }
 
   /* ── The 375 frame uses shorter copy; keep the accessible name of the
         environment select identical to whichever string is visible. ── */
   function syncEnvLabel() {
-    var lng = $('nala-w2-long');
+    var lng = $('select-w2-long');
     var visible = lng && window.getComputedStyle(lng).display !== 'none';
     env.setAttribute('aria-label', visible ? 'when I mostly drive' : 'when I drive');
   }
@@ -768,35 +843,65 @@ body {
     var text = 'Energy consumption combined ' + v.consumption +
                ' kWh/100 km 4  •CO₂ emissions combined 0 g/km 4  •CO₂ class A';
     consumptionEl.textContent = text;
-    detailsConsumptionEl.textContent = text;
 
-    $('nala-veh-family').textContent = v.family;
-    $('nala-veh-sizer-sub').textContent = v.family;
+    $('select-veh-family').textContent = v.family;
+    $('select-veh-sizer-sub').textContent = v.family;
     /* The car image is NOT touched here. src never changes (one render), so rewriting
        alt per variant would make the text alternative describe an image that is not
        displayed — SC 1.1.1. Reinstate both together, or neither. */
 
-    syncSizer(veh, 'nala-veh-sizer');
-    syncSizer(env, 'nala-env-sizer');
-    syncSizer(wea, 'nala-wea-sizer');
-    syncSizer(occ, 'nala-occ-sizer');
   }
 
-  /* ── Details disclosure: two triggers, one region, both kept in sync ── */
-  function setDetails(open) {
-    detailsEl.hidden = !open;
-    infoBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
-    ctaBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
-  }
-  function toggleDetails() { setDetails(detailsEl.hidden); }
+  /* ── Range info modal ── */
+  var modalIsOpen = false;
 
-  infoBtn.addEventListener('click', toggleDetails);
-  ctaBtn.addEventListener('click', toggleDetails);
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && !detailsEl.hidden) {
-      setDetails(false);
+  function openRangeModal() {
+    rangeOverlay.hidden = false;
+    requestAnimationFrame(function () {
+      rangeOverlay.classList.add('is-open');
+    });
+    rangeModalClose.focus();
+    modalIsOpen = true;
+  }
+
+  function closeRangeModal() {
+    rangeOverlay.classList.remove('is-open');
+    var done = false;
+    function finish() {
+      if (done) { return; }
+      done = true;
+      rangeOverlay.hidden = true;
       infoBtn.focus();
+      modalIsOpen = false;
     }
+    rangeModal.addEventListener('transitionend', finish, { once: true });
+    setTimeout(finish, 350); /* fallback if transition fires before listener attaches */
+  }
+
+  infoBtn.addEventListener('click', openRangeModal);
+  rangeModalClose.addEventListener('click', closeRangeModal);
+
+  /* Close on backdrop click */
+  $('nala-range-backdrop').addEventListener('click', closeRangeModal);
+
+  /* Focus trap: cycle between close button and body paragraph */
+  var rangeModalBody = $('nala-range-modal-body');
+  rangeModal.addEventListener('keydown', function (e) {
+    if (e.key !== 'Tab') { return; }
+    e.preventDefault();
+    if (document.activeElement === rangeModalClose && !e.shiftKey) {
+      rangeModalBody.focus();
+    } else if (document.activeElement === rangeModalBody && e.shiftKey) {
+      rangeModalClose.focus();
+    } else if (e.shiftKey) {
+      rangeModalBody.focus();
+    } else {
+      rangeModalClose.focus();
+    }
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && modalIsOpen) { closeRangeModal(); }
   });
 
   [veh, env, wea, occ].forEach(function (s) { s.addEventListener('change', update); });

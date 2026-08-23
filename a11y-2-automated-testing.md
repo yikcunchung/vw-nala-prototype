@@ -449,3 +449,124 @@ chrome --headless=new --remote-debugging-port=9345 --disable-gpu
 
 **Automate the structural half in CI, but do not mistake it for the whole.** A structural-only suite
 is exactly what scores clean on a build with a Level A naming failure.
+
+---
+
+# 9. Manual run results
+
+Where the runs from §6 get recorded, graded against §7. **Same rule as the Visualizer's pack: an
+empty row is not a pass.** A blank cell means nobody has listened yet.
+
+## 9.1 Screen reader — VoiceOver — ❌ NOT YET RUN
+
+**Nothing below has been observed.** The `Heard` column is empty on purpose. Do not read the
+predictions in §7 as results — they are what the accessibility tree implies, which is precisely the
+thing a screen reader exists to disprove.
+
+Record when run: VoiceOver version, macOS build, browser + version, live-or-local, commit, window
+size. Safari first, Chrome as a second opinion — **browser agreement is itself evidence**.
+
+| # | Item | Heard | Verdict |
+|---|---|---|---|
+| 1 | Each of the four dropdowns announced as a pop-up button with **name *and* value** | | |
+| 2 | `#select-veh` — name, then value | | |
+| 3 | `#select-env` — name, then value | | |
+| 4 | `#select-wea` — name, then value | | |
+| 5 | `#select-occ` — name, then value | | |
+| 6 | **Name stability** — all four names unchanged after changing all four values | | |
+| 7 | **Result panel, every string in order** — does *"Estimated range"* come twice? | | |
+| 8 | Live region on change — **how many announcements**, and is the count-up silent? | | |
+| 9 | ⓘ with **Enter**, then with **Space** — does the modal open both ways? | | |
+| 10 | **On open: is the full paragraph announced, or skipped?** | | |
+| 11 | **Can `VO`+arrow escape the dialog?** (≥ 8 presses) | | |
+| 12 | Escape / × / click-outside — all three close **and** re-announce the ⓘ button | | |
+| 13 | "Learn more" announced as a **link**, with destination and new-tab warning | | |
+| 14 | Rotor → Form Controls: 4 dropdowns + 2 buttons, no blank, no duplicate | | |
+| 15 | Rotor → Landmarks: banner + main present | | |
+
+**The four rows that carry the open questions** — 7, 10, 11 and 6. See §7 for what each one settles
+and, for row 7, the remedy that is deliberately *not* pre-applied.
+
+**Row 10 is the one the Visualizer's run actually caught.** On that component, opening the
+disclaimer put focus on the close button — *after* the text — so the panel's content was never
+announced, and no tool reported it. nala is built to avoid that specific defect: focus is placed on
+the modal's body copy, not the close button. Row 10 is the confirmation that the fix works in
+speech, not just in the tree.
+
+## 9.2 WAVE — ◐ hosted done, extension outstanding
+
+**Hosted engine** (`wave.webaim.org/report#/<url>`), against the live deployment, re-run after every
+change to `index.html`:
+
+| Measure | Result |
+|---|---|
+| Errors | **0** |
+| Contrast errors | **0** |
+| Alerts | 1 — *"Possible heading"* |
+| Features | 4 — alt text, skip link, skip-link target, language |
+| Structural elements | 4 — h1, h2, header, main |
+| ARIA | 33 — incl. **1 ARIA popup**, **1 alert/live region**, 16 `aria-hidden` |
+| AIM score | **10 / 10** |
+
+**Why the hosted run is admissible here, unlike on the Visualizer.** That component builds behind an
+`IntersectionObserver` and injects its controls, so the hosted service analysed an unbuilt shell and
+the extension was mandatory. **nala has no lazy-build** — the sentence and all four selects are in
+the served HTML — so the hosted engine sees the real page. Confirmed by reading the document title
+back out of WAVE's own report, and by **1 ARIA popup / 1 Heading level 2** appearing in its ARIA
+census: those are the dialog's `aria-haspopup` and its `h2`, so the modal markup is demonstrably in
+what WAVE parsed.
+
+**The 1 alert is not a defect.** *"Possible heading"* fires on the bold standalone **Estimated
+range**. It is a label for the value readout, not a section title. Do not promote it to an `<h3>`.
+
+**Still outstanding: the extension run**, which is the only way to score the **modal-open** state —
+WAVE analyses a URL and cannot open a dialog.
+
+## 9.3 axe DevTools — ◐ engine-equivalent done, UI outstanding
+
+| Scan | Result |
+|---|---|
+| axe-core 4.13.0 over CDP, **96 rules**, 5 viewports × 2 states, live | **0 violations**, 0 JS exceptions |
+| `target-size` (SC 2.5.8) force-enabled | **7 pass** default / **8 pass** modal-open, 0 violations |
+| `color-contrast` incomplete | 1, modal-open at ≥390px — resolved by hand to **15.81:1 PASS** |
+
+**Version deviation to record when the UI run happens:** the protocol names **4.131.2**. The CDP run
+used **axe-core 4.13.0**, the library the extension embeds — with no `runOnly` filter *and* all nine
+default-disabled rules force-enabled, which is a **superset** of the extension's default scan. A UI
+run is still owed to satisfy the protocol literally; expect agreement.
+
+**What no axe version can close.** axe's `color-contrast` rule implements **SC 1.4.3 (text) only**,
+and axe-core ships **no rule for SC 1.4.11 non-text contrast**. The select border at **2.29:1** is a
+real failure that every axe run — CDP or UI, 2.1 or 2.2 — will pass. See §2.
+
+## 9.4 NVDA — ❌ not done
+
+**NVDA 2026.1.1.55980** is named by the protocol and has not been run; it needs Windows. VoiceOver
+is planned instead and is a **documented deviation, not a substitute** — a formal BITV / EN 301 549
+audit naming NVDA will not accept VoiceOver evidence for that line item. §1 has the reasoning.
+
+---
+
+# 10. The claim this evidence supports
+
+> *"This app meets WCAG 2.2 A/AA on every automated and runtime check available — axe at 96 rules
+> across five viewports and two states, WAVE, the accessibility tree, real key events and literal
+> 400% zoom, all against the live deployment — with **one non-text-contrast failure inherited from
+> the core component library**, two discretionary decisions recorded, and **screen-reader
+> verification still outstanding**."*
+
+**What it must not say: "fully compliant."** Three specific reasons, not hedging:
+
+1. **SC 1.4.11 genuinely fails.** The `<select>` border is 2.29:1 against the page background and
+   needs 3:1. It is a core design-system value this prototype does not own, which changes *who
+   fixes it*, not *whether it fails*. No tool reports it.
+2. **No screen reader has been run.** §9.1 is empty. The accessibility tree proves what is
+   *exposed*; NVDA, JAWS and VoiceOver differ in what they *announce*.
+3. **Two recorded decisions rest on readings an auditor may reject** — SC 2.5.3 on all four select
+   names, and the 2.4.4 link text. Both are written down rather than smoothed over.
+
+**The precedent for that wording** is the Visualizer's pack, which says *"meets WCAG 2.2 A/AA on
+every automated and runtime check available, with five documented discretionary decisions, pending
+screen-reader verification."* Quote this shape of claim rather than inventing a stronger one: on this
+very suite, the one defect class that shipped (unnamed inline SVGs, SC 1.1.1) was passed by axe,
+WAVE and Nu alike. **Tool-clean is not compliant.**

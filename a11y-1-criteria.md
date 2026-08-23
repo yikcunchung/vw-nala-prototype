@@ -198,9 +198,10 @@ criteria are not required and are not listed.
 - axe-core 4.13.0, **96 rules** (all nine default-disabled rules force-enabled, including `target-size`): **0 violations** across 5 viewports × 2 states, 0 JS exceptions.
 - **WAVE hosted, against the live deployment: 0 errors, 0 contrast errors, AIM score 10/10.** 1 alert ("Possible heading" on the bold *Estimated range* label — intentionally a label, not a heading).
 
-**Three manual runs remain.** Full protocol in `a11y-2-automated-testing.md` **§6**, checklist in
-**§7** — actions and grading are deliberately separated so the tester records what happened rather
-than judging in the moment.
+**Three manual runs remain.** Protocol in `a11y-2-automated-testing.md` **§6**, checklist in **§7**,
+and results are recorded in **§9** — actions, grading and evidence are deliberately three separate
+sections so the tester records what happened rather than judging in the moment. **§9.1 is currently
+empty**: no screen reader has been run, and an empty row there is not a pass.
 
 | Run | Status | Why it is still open |
 |---|---|---|

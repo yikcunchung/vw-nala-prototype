@@ -1,6 +1,6 @@
 # A11y 2 of 3 — What the automated tests cover, and what they cannot
 
-**App:** VW NaLa — Private Vehicles (`nala`).
+**App:** VW NaLa (`nala`).
 **Audited:** 2026-08-22 against the live deployment, headless Chrome 151.0.7922.174, axe-core 4.13.0
 (`axe.version` read from the engine, not the bundle filename).
 **Deployed at:** https://yikcunchung.github.io/vw-nala-prototype/
@@ -60,36 +60,49 @@ NVDA pass before formal sign-off.
 
 ## axe-core — 0 violations
 
-Bare `axe.run(document)` plus the default-disabled rules force-enabled (97 rules).
-Viewports: 1440×900, 768×1024, 390×844, 320×640, and 320×256 @ dsf 4 (literal 400% zoom).
+Bare `axe.run(document)` plus all nine default-disabled rules force-enabled (**96 rules**,
+axe-core 4.13.0). Viewports: 1440×900, 768×1024, 390×844, 320×256 @ dsf 1, and 320×256 @ dsf 4
+(literal 400% zoom). **Each viewport run twice — default state and modal-open state** (10 runs).
 
 | Measure | Value |
 |---|---|
-| Rules executed | 97 |
-| Violations | **0** at every viewport |
-| `target-size` | **passes 7 nodes**, 0 violations, 0 incomplete |
+| Rules executed | 96 |
+| Violations | **0** in all 10 runs |
+| `target-size` | **7 pass** default / **8 pass** modal-open, 0 violations |
 | JS exceptions | **0** |
-| Horizontal scroll | none, at any viewport |
+| Horizontal scroll | none, at any viewport, in either state |
 
 ## Accessibility tree
 
-| Measure | Value |
-|---|---|
-| Nodes (1440×900) | 120 |
-| Named interactive / graphic nodes | 24 |
-| **Unnamed** | **0** |
-| Focusable controls | 7 |
+Measured at 1440×900 via `Accessibility.getFullAXTree` (unignored nodes only).
 
-> No unnamed node has ever been exposed here — every inline `<svg>` already carried `aria-hidden="true"` or a name.
+| Measure | Default | Modal open |
+|---|---|---|
+| Nodes | 84 | 103 |
+| Named | 64 | 80 |
+| **Unnamed interactive / graphic** | **0** | **0** |
+| Duplicate role+name | 0 | 0 |
+| Focusable controls | 7 | 9 |
 
-## WAVE 3.3.1.0 — real engine, public URL
+> No unnamed node has ever been exposed here — every inline `<svg>` already carried
+> `aria-hidden="true"` or a name, including the modal's close glyph.
 
-| Errors | Contrast errors | Alerts | Features | Structure | ARIA |
-|---|---|---|---|---|---|
-| **0** | **0** | 1 | 4 | 3 | 29 |
+## WAVE — real engine, live public URL
 
-The run was confirmed to have analysed the real page — control count and document title were read
-back out of WAVE's iframe, not assumed.
+Run against `https://yikcunchung.github.io/vw-nala-prototype/`.
+
+| Errors | Contrast errors | Alerts | Features | Structure | ARIA | AIM score |
+|---|---|---|---|---|---|---|
+| **0** | **0** | 1 | 4 | 4 | 33 | **10 / 10** |
+
+The run was confirmed to have analysed the real page — the document title was read back out of
+WAVE's own report ("WAVE Report of Volkswagen NaLa"), not assumed.
+
+**The 1 alert is "Possible heading"** — WAVE flags the bold standalone *Estimated range* label. It
+is deliberately a label for the value readout, not a section heading. Not a defect.
+
+**This run covers the page in its default state only.** WAVE analyses a URL, so it cannot open the
+range info modal. The modal is covered by the axe runs above and by the driven keyboard tests below.
 
 ## Nu HTML validator — 0 errors
 
@@ -98,7 +111,33 @@ checked and kept.
 
 ## Contrast
 
-**Nothing to resolve.** No `color-contrast` node entered the incomplete bucket at any viewport. axe computed a ratio for every text node and none failed.
+**One SC 1.4.11 failure, inherited from the core component library.** The `<select>` border
+`--border-input: rgb(161,164,172)` (`#a1a4ac`) measures **2.29:1** against the cream page background
+`rgba(246,245,242,1)`. SC 1.4.11 Non-text Contrast requires **3:1** for the visual boundary of a
+control. **This value comes from the VW core component library and is not owned by this prototype** —
+it is recorded and raised upstream, not patched locally. Note that **axe cannot see this**: the
+`color-contrast` rule implements SC 1.4.3 (text) only, and axe-core ships no rule for 1.4.11 border
+contrast. A tool-clean run does not clear this criterion.
+
+**Text contrast — all pass.** Measured on composited pixels:
+
+| Pair | Ratio | Threshold | Result |
+|---|---|---|---|
+| Modal body `#1b2236` on white | 15.81:1 | 4.5:1 | pass |
+| Consumption `rgb(208,209,213)` on navy `#1b2236` | 10.36:1 | 4.5:1 | pass |
+| Chevron glyph `#293043` on cream | 12.05:1 | 3:1 | pass |
+| Focus ring `#C86C03` on cream | 3.44:1 | 3:1 | pass |
+| Focus ring `#C86C03` on navy | 4.22:1 | 3:1 | pass |
+| Focus ring `#C86C03` on modal white | 3.75:1 | 3:1 | pass |
+| **Select border `rgb(161,164,172)` on cream** | **2.29:1** | **3:1** | **fail (inherited)** |
+
+**One `color-contrast` incomplete, resolved by hand.** In the modal-open state at ≥390px axe reports
+1 node needing review: `#nala-range-modal-body`, with "background color could not be determined
+because it partially overlaps other elements". The cause is geometric — the full-width page regions
+sit behind the `position: fixed` overlay, so axe cannot trace a single background. The real
+composited value is navy on white, **15.81:1 — PASS**. Setting an explicit `background-color` on the
+paragraph and reparenting the backdrop as a sibling were both tried and neither clears the flag; it
+is an axe limitation with fixed overlays, not a defect.
 
 ## Orientation and text spacing
 

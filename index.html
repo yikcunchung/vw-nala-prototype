@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" href="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">
 <meta name="description" content="Find the estimated range of your Volkswagen ID. model for your driving conditions.">
-<title>Volkswagen NaLa — Private Vehicles</title>
+<title>Volkswagen NaLa</title>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -803,6 +803,7 @@ body {
   var infoBtn = $('nala-info-btn');
   var rangeOverlay = $('nala-range-overlay'), rangeModal = $('nala-range-modal');
   var rangeModalClose = $('nala-range-modal-close');
+  var rangeModalBody = $('nala-range-modal-body');
 
   var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -855,12 +856,29 @@ body {
   /* ── Range info modal ── */
   var modalIsOpen = false;
 
+  /* `inert` on the background is what makes the trap robust: the Tab handler below
+     only fires while focus is already inside the dialog, so without inert a trip out
+     to the browser chrome and back could land focus on a background control. */
+  var bgRegions = [$('topbar'), $('nala-main')];
+  function setBackgroundInert(on) {
+    bgRegions.forEach(function (el) {
+      if (!el) { return; }
+      if (on) { el.setAttribute('inert', ''); } else { el.removeAttribute('inert'); }
+    });
+  }
+
   function openRangeModal() {
     rangeOverlay.hidden = false;
+    setBackgroundInert(true);
     requestAnimationFrame(function () {
       rangeOverlay.classList.add('is-open');
     });
-    rangeModalClose.focus();
+    /* Focus the copy, not the close button. A screen reader announces the dialog's
+       accessible name (the h2) on open but NOT the body text, so landing on the
+       close button leaves the entire explanation unread. Focusing the paragraph
+       makes it the announced element. Deliberately NOT paired with
+       aria-describedby, which would make it announce twice. */
+    rangeModalBody.focus();
     modalIsOpen = true;
   }
 
@@ -871,6 +889,8 @@ body {
       if (done) { return; }
       done = true;
       rangeOverlay.hidden = true;
+      /* Must clear inert BEFORE focusing, or the focus call is ignored. */
+      setBackgroundInert(false);
       infoBtn.focus();
       modalIsOpen = false;
     }
@@ -885,7 +905,6 @@ body {
   $('nala-range-backdrop').addEventListener('click', closeRangeModal);
 
   /* Focus trap: cycle between close button and body paragraph */
-  var rangeModalBody = $('nala-range-modal-body');
   rangeModal.addEventListener('keydown', function (e) {
     if (e.key !== 'Tab') { return; }
     e.preventDefault();

@@ -1,6 +1,6 @@
 # A11y 3 of 3 — What to build
 
-**App:** VW NaLa — Private Vehicles (`nala`). **Target:** production vw.com — AEM + React SPA Editor +
+**App:** VW NaLa (`nala`). **Target:** production vw.com — AEM + React SPA Editor +
 styled-components.
 **Companions:** `a11y-1-criteria.md` (every criterion, pass/fail) ·
 `a11y-2-automated-testing.md` (what the tools can and cannot prove).
@@ -182,15 +182,22 @@ with CSS `order`.
 
 `SC 2.4.7` · **Level AA**
 
-`outline: 2px solid var(--navy-dark); outline-offset: 3px`. Apply it to **every** focusable thing
+`outline: 2px solid #C86C03` with **no `outline-offset`**. Apply it to **every** focusable thing
 including skip links and inline links — a control that falls back to the browser's default ring
 still passes, but it is a visible inconsistency and the first thing an auditor notices.
+
+The one exception is the skip link, which uses `outline-offset: -4px` so the ring sits inside its
+own filled chip rather than bleeding onto the page behind it.
+
+`#C86C03` is chosen because it clears the 3:1 SC 1.4.11 threshold against **all three** surfaces
+this app puts a control on: **3.44:1** on the cream page, **4.22:1** on the navy result panel, and
+**3.75:1** on the modal white. A single navy ring would have been invisible on the navy panel.
 
 **Never remove an outline without replacing it.** If the real control is a visually hidden
 `<input>` behind a styled surrogate, style the ring on the surrogate:
 
 ```css
-.vw-switch input:focus-visible ~ .vw-switch-track { outline: 2px solid #293043; outline-offset: 3px; }
+.vw-switch input:focus-visible ~ .vw-switch-track { outline: 2px solid #C86C03; }
 ```
 
 ---
@@ -212,6 +219,13 @@ after `.focus()` catches a smooth scroll mid-flight and reports a false failure.
 
 Tab must cycle through every stop and out the other side. Any disclosure or panel must be escapable.
 
+**A modal dialog is the permitted exception** — it may contain focus, but only if Escape always
+closes it and focus returns to the element that opened it. Containment must be enforced two ways,
+not one: a `keydown` handler that cycles Tab inside the dialog, **and** `inert` on the background
+regions. The handler alone is not enough, because it only fires while focus is already inside the
+dialog — a trip out to the browser chrome and back would land on a background control and escape the
+cycle. Remove `inert` *before* restoring focus on close, or the `.focus()` call is silently ignored.
+
 ---
 
 ### B7 — A scrollable region is keyboard reachable
@@ -224,6 +238,41 @@ A region that scrolls must be focusable so a keyboard user can scroll it: `tabin
 > **Two rules disagree here, by construction.** axe's experimental `focus-order-semantics` flags
 > `tabindex="0"` on a `role="group"` as a defect. It is tagged `best-practice` + `experimental`,
 > carries **no `wcag2*` tag**, and maps to no WCAG criterion. **Keep the `tabindex`** — 2.1.1 wins.
+
+---
+
+### B8 — A modal dialog announces its own content, not just its name
+
+`SC 4.1.2` · **Level A** · `SC 2.4.3` · **Level A**
+
+The range info modal is the reference implementation. Five things have to hold together:
+
+```html
+<div id="overlay" hidden>
+  <div id="backdrop" aria-hidden="true"></div>
+  <div role="dialog" aria-modal="true" aria-labelledby="dlg-title" tabindex="-1">
+    <h2 id="dlg-title">Estimated range</h2>
+    <p id="dlg-body" tabindex="0">…the explanation…</p>
+  </div>
+</div>
+```
+
+1. **`hidden` on the wrapper when closed**, so the dialog is absent from the accessibility tree
+   rather than merely invisible.
+2. **`aria-labelledby` → a real heading inside the dialog.** Do not hand-write a duplicate string.
+3. **The backdrop is a sibling, `aria-hidden="true"`** — never an ancestor of the dialog, and never
+   the same element as the overlay.
+4. **Initial focus goes to the body copy, not the close button.** A screen reader announces the
+   dialog's *name* on open but not its *content*; landing on the close button leaves the entire
+   explanation unread. Give the paragraph `tabindex="0"` and focus it. This also makes the copy
+   keyboard-scrollable when it overflows, which B7 requires anyway. **Do not also add
+   `aria-describedby` pointing at the same paragraph** — it would then be announced twice.
+5. **The trigger declares `aria-haspopup="dialog"`** and carries **no `aria-expanded`**.
+   `aria-expanded` belongs to the disclosure pattern; a button that opens a modal is not a
+   disclosure, and advertising a state you do not maintain is worse than advertising none.
+
+Escape, the close button, and a backdrop click must all close it and all restore focus to the
+trigger. See B6 for why the focus trap needs `inert` as well as a Tab handler.
 
 ---
 # 3. Pointer and targets
@@ -378,7 +427,7 @@ No `@media (orientation:)` rule that hides or restricts content.
       nodes, every duplicate role+name pair reviewed
 - [ ] **Real keyboard run** — Tab / Shift+Tab / Enter / Space / Arrows / Escape, asserting
       `document.activeElement` and the resulting state at each step
-- [ ] **All states, not just the default** — expand every disclosure, open every panel, select every
+- [ ] **All states, not just the default** — open every dialog, select every
       option, and re-run the checks after each
 - [ ] **Reflow at 320×256 @ dsf 4** — nothing lost, no page-level horizontal scroll
 - [ ] **Contrast on composited pixels** wherever text sits over a gradient or imagery
@@ -399,17 +448,18 @@ assembled from the sentence fragments around it.
 **The rule that works: append, never splice.**
 
 ```html
-<!-- ✓ #nala-veh — visible "of my ID.7", sr-only "variant" appended at the END -->
-<span id="nala-w1">of my</span>
-<select aria-labelledby="nala-w1 nala-veh-val nala-veh-hint">…</select>
-<span id="nala-veh-hint" class="sr-only">variant</span>
+<!-- ✓ #select-veh — visible "of my ID.7", sr-only "variant" appended at the END -->
+<span id="select-w1">of my</span>
+<span id="select-veh-family" class="fl-label">ID.7</span>
+<select aria-labelledby="select-w1 select-veh-family select-veh-hint">…</select>
+<span id="select-veh-hint" class="sr-only">variant</span>
 
-<!-- ✗ #nala-wea — visible "in … weather", name "in which weather"
+<!-- ✗ #select-wea — visible "in … weather", name "in which weather"
      the sr-only word is spliced BETWEEN the two visible words, so the visible
      string is no longer contiguous in the name -->
 ```
 
-`#nala-wea` is the one recorded decision in `a11y-1-criteria.md`. Per-word it passes; a speech-input
+`#select-wea` is the one recorded decision in `a11y-1-criteria.md`. Per-word it passes; a speech-input
 user saying "in weather" would not match. Fix by moving "which" to the end, or dropping it.
 
 **`syncEnvLabel()` rewrites `aria-label` at the 400px breakpoint** — the visible text changes from
@@ -423,6 +473,6 @@ target ~36.7 × 36.8 (C1), and it has 66px of clearance besides. But **a manual 
 border box will read 23.8 and flag it**, so the `::before` is load-bearing for the explanation even
 though it is not load-bearing for the pass. Do not remove it.
 
-**One naming oddity, not a failure:** `select#nala-occ` is named "weather and I am driving" — it
+**One naming oddity, not a failure:** `select#select-occ` is named "weather and I am driving" — it
 opens with a word belonging to the *previous* control. Correct per 2.5.3, mildly confusing to hear.
 Worth revisiting if the sentence is ever restructured.

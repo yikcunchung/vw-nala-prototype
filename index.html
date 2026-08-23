@@ -747,13 +747,16 @@ body {
           <p class="sr-only" id="nala-live" aria-live="polite" aria-atomic="true"></p>
         </div>
 
-        <!-- A real link-out, so it must expose role=link, not role=button. The
-             sr-only tail is APPENDED, never spliced, so the visible "Learn more"
-             stays a contiguous substring of the accessible name (SC 2.5.3) while
-             2.4.4 gets a purpose and the user gets a new-tab warning. -->
+        <!-- A real link-out, so it must expose role=link, not role=button.
+             aria-label, NOT an appended .sr-only span: VoiceOver announced only the
+             visible "Learn more" and dropped the clipped tail entirely, so 2.4.4's
+             purpose and the new-tab warning never reached the user. A computed name
+             has no dependency on rendering. The visible text is still a contiguous
+             PREFIX of the name, so SC 2.5.3 holds — append, never splice. -->
         <a class="nala-cta" id="nala-cta"
            href="https://www.volkswagen.co.uk/en/electric-and-hybrid/charging-and-range/range/range-simulator.html"
-           target="_blank" rel="noopener noreferrer">Learn more<span class="sr-only"> about range on volkswagen.co.uk (opens in a new tab)</span></a>
+           target="_blank" rel="noopener noreferrer"
+           aria-label="Learn more about range on volkswagen.co.uk (opens in a new tab)">Learn more</a>
       </div>
 
       <p class="nala-consumption" id="nala-consumption">Energy consumption combined 16.6 - 15.2 kWh/100 km 4  &bull;CO&#8322; emissions combined 0 g/km 4  &bull;CO&#8322; class A</p>

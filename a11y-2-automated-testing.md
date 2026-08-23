@@ -194,7 +194,7 @@ obscured — and only `violations` was read. In normal flow the rule fires on bo
 
 ---
 
-# 4. Ten traps that produce a confident false pass
+# 4. Eleven traps that produce a confident false pass
 
 **1 · Bare `axe.run()` is not every rule.** Nine rules are `enabled:false` by default in axe-core
 4.13.0: **`target-size`** (SC 2.5.8), `aria-roledescription`, `color-contrast-enhanced`,
@@ -241,6 +241,28 @@ domain, or append a cache-busting query string.
 expose any number of unnamed graphics and still score 0 violations. **Read `role=image` nodes off
 the AX tree and assert 0 unnamed** — that is how every unnamed-graphic failure in this suite was
 found, and neither axe nor WAVE nor Nu saw any of them.
+
+**11 · `.sr-only` text that feeds an accessible NAME is not announced by VoiceOver — but every
+tool says it is.** This bit twice in one run (§9.1 rows 6 and 13) and it is invisible to automation,
+because Chrome computes the name correctly and axe reads Chrome:
+
+| `.sr-only` used as | VoiceOver | Verdict |
+|---|---|---|
+| **live-region content** (`#nala-live`) | announced on change | works — keep |
+| **a contribution to an accessible name** (appended span inside a link, or an `aria-labelledby` target) | **silent** | do not use |
+
+The "Learn more" link appended ` about range on volkswagen.co.uk (opens in a new tab)` in a clipped
+span. Chrome's tree reported the full name; **VoiceOver spoke only "learn more"**, so SC 2.4.4's
+purpose and the new-tab warning never reached the user. Same shape as row 6, where the readout's only
+readable copy was clipped text.
+
+**Use `aria-label` for name text that has no visible counterpart.** A computed name has no dependency
+on rendering. Keep the visible words as a **prefix** of it so SC 2.5.3 still holds — append, never
+splice. Reserve `.sr-only` for live-region content, which is the one job it does reliably.
+
+> **Why no tool catches this:** the accessible name is *correct* in the tree. `image-alt`,
+> `link-name`, `button-name` and the AX-tree unnamed-node sweep all pass, because there is a name.
+> The failure is in what the reader chooses to speak. Only a screen reader sees it.
 
 ---
 
@@ -463,14 +485,15 @@ is exactly what scores clean on a build with a Level A naming failure.
 Where the runs from §6 get recorded, graded against §7. **Same rule as the Visualizer's pack: an
 empty row is not a pass.** A blank cell means nobody has listened yet.
 
-## 9.1 Screen reader — VoiceOver — ✅ RUN (13 of 15 rows evidenced)
+## 9.1 Screen reader — VoiceOver — ✅ COMPLETE (15 of 15 rows)
 
 **VoiceOver, macOS 26.5.2 (25F84), Chrome and Safari**, against the live deployment. Steps 1–3 run
 at `b59ee16`; step 4 re-run at `7e69034` after the fix it produced. Window size not recorded.
 
 **Safari is the record; Chrome was the second opinion and disagreed once — row 5.** All 11 protocol
-steps were driven. **The run found one real defect that every tool passed** (row 6) and settled two
-design decisions that were being held open on theory (rows 10 and 7).
+steps were driven. **The run found two real defects that every tool passed** (rows 6 and 13) and settled two design
+decisions that were being held open on theory (rows 10 and 7). Both defects have the same root
+cause — see the `.sr-only` trap in §4.
 
 **What it does not close:** NVDA — see §9.4. This is a VoiceOver pass, and VoiceOver is a documented
 deviation from the named protocol, not a substitute.
@@ -489,12 +512,11 @@ deviation from the named protocol, not a substitute.
 | 10 | **On open: is the full paragraph announced, or skipped?** | **The whole paragraph is announced.** The `h2` headline is **not** | ✅ / see below |
 | 11 | **Can `VO`+arrow escape the dialog?** (≥ 8 presses) | No. Cycles between the paragraph and Close only | ✅ |
 | 12 | Escape / × / click-outside — all three close **and** re-announce the ⓘ button | All three return focus to the ⓘ button | ✅ |
-| 13 | "Learn more" announced as a **link**, with destination and new-tab warning | | |
+| 13 | "Learn more" announced as a **link**, with destination and new-tab warning | *"link, learn more"* — **role correct, but the destination and new-tab warning were NOT spoken** | ⚠️ **fixed** |
 | 14 | Rotor → Form Controls: 4 dropdowns + 2 buttons, no blank, no duplicate | The focusable set is listed | ✅ |
-| 15 | Rotor → Landmarks: banner + main present | | |
+| 15 | Rotor → Landmarks: banner + main present | banner and main | ✅ |
 
-Rows 13 and 15 are blank because they were not separately reported. **Blank is not a pass.**
-Answers are paraphrase, not verbatim transcript — the Caption Panel was not enabled, so exact
+All 15 rows evidenced. Answers are paraphrase, not verbatim transcript — the Caption Panel was not enabled, so exact
 utterances were not captured. Good enough to settle every decision below; not a substitute for a
 transcript if a formal audit asks for one.
 

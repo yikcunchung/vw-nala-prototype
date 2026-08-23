@@ -95,6 +95,11 @@ If a control has a visible text label, the accessible name must **contain that t
 // ✗ visible "Learn more", name "Read more about range"   (visible text absent)
 // ✓ append, never splice:  visible "Learn more",
 //   name "Learn more about range on volkswagen.co.uk (opens in a new tab)"
+//
+// ...and put that extra text in aria-label, NOT in an appended .sr-only span.
+// VoiceOver announced only the visible "Learn more" and dropped the clipped
+// tail, while Chrome's tree reported the full name — so every tool passed it.
+// .sr-only is reliable for live-region content and NOT for name text.
 ```
 
 **axe has no rule for this at all.** It must be checked by hand, against the accessibility tree.

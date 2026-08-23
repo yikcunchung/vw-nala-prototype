@@ -64,6 +64,11 @@ Bare `axe.run(document)` plus all nine default-disabled rules force-enabled (**9
 axe-core 4.13.0). Viewports: 1440×900, 768×1024, 390×844, 320×256 @ dsf 1, and 320×256 @ dsf 4
 (literal 400% zoom). **Each viewport run twice — default state and modal-open state** (10 runs).
 
+**Run against the live deployment**, not a local copy, at commit `40b75d8` — and the live
+`index.html` was confirmed byte-for-byte identical to source first (sha256 `0a9f6652d7815e81…`).
+Auditing localhost and *reporting* it as live is the easiest way to publish a figure that does not
+describe what ships; see §3.
+
 | Measure | Value |
 |---|---|
 | Rules executed | 96 |
@@ -89,14 +94,18 @@ Measured at 1440×900 via `Accessibility.getFullAXTree` (unignored nodes only).
 
 ## WAVE — real engine, live public URL
 
-Run against `https://yikcunchung.github.io/vw-nala-prototype/`.
+Run against `https://yikcunchung.github.io/vw-nala-prototype/` at commit `40b75d8`, and re-run
+after every subsequent change to `index.html` — an earlier run against the pre-dialog build is not
+evidence for this one.
 
 | Errors | Contrast errors | Alerts | Features | Structure | ARIA | AIM score |
 |---|---|---|---|---|---|---|
 | **0** | **0** | 1 | 4 | 4 | 33 | **10 / 10** |
 
 The run was confirmed to have analysed the real page — the document title was read back out of
-WAVE's own report ("WAVE Report of Volkswagen NaLa"), not assumed.
+WAVE's own report ("WAVE Report of Volkswagen NaLa"), not assumed. WAVE also reports **1 ARIA
+popup** and **1 Heading level 2**, which are the dialog's `aria-haspopup` and its `h2` title, so the
+modal structure is demonstrably in what WAVE parsed even though it cannot open it.
 
 **The 1 alert is "Possible heading"** — WAVE flags the bold standalone *Estimated range* label. It
 is deliberately a label for the value readout, not a section heading. Not a defect.

@@ -1,8 +1,10 @@
 # A11y 1 of 3 — WCAG 2.2 criterion checklist
 
 **App:** VW NaLa (`nala`), a single-page simulator.
-**Audited:** 2026-08-23 against the live deployment.
+**Audited:** 2026-08-23 against the live deployment at commit **`40b75d8`**.
 **Deployed at:** https://yikcunchung.github.io/vw-nala-prototype/
+**Live verified identical to source:** `index.html` on Pages is byte-for-byte equal to the audited
+file (sha256 `0a9f6652d7815e81…`, 47 332 bytes), so every figure below describes what actually ships.
 **Scope:** the whole page. This app is standalone, so there is no component-versus-page split and
 nothing is out of scope. **PDFs are excluded** — the app ships none; they would be a separate
 conformance surface under EN 301 549 clause 10, checked with PAC.

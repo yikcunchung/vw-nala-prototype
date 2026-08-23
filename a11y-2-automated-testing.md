@@ -457,24 +457,23 @@ is exactly what scores clean on a build with a Level A naming failure.
 Where the runs from §6 get recorded, graded against §7. **Same rule as the Visualizer's pack: an
 empty row is not a pass.** A blank cell means nobody has listened yet.
 
-## 9.1 Screen reader — VoiceOver — ❌ NOT YET RUN
+## 9.1 Screen reader — VoiceOver — ◐ IN PROGRESS (steps 1–4 of 11 done)
 
-**Nothing below has been observed.** The `Heard` column is empty on purpose. Do not read the
-predictions in §7 as results — they are what the accessibility tree implies, which is precisely the
-thing a screen reader exists to disprove.
+**VoiceOver, macOS 26.5.2 (25F84), Chrome and Safari**, against the live deployment. Steps 1–3 run
+at `b59ee16`; step 4 re-run at `7e69034` after the fix it produced. Window size not recorded.
 
-Record when run: VoiceOver version, macOS build, browser + version, live-or-local, commit, window
-size. Safari first, Chrome as a second opinion — **browser agreement is itself evidence**.
+**This run has already justified itself: it found a defect no tool reported.** Rows 5–7 below.
+Rows 8–15 are still empty and an empty row is not a pass.
 
 | # | Item | Heard | Verdict |
 |---|---|---|---|
-| 1 | Each of the four dropdowns announced as a pop-up button with **name *and* value** | | |
-| 2 | `#select-veh` — name, then value | | |
-| 3 | `#select-env` — name, then value | | |
-| 4 | `#select-wea` — name, then value | | |
-| 5 | `#select-occ` — name, then value | | |
-| 6 | **Name stability** — all four names unchanged after changing all four values | | |
-| 7 | **Result panel, every string in order** — does *"Estimated range"* come twice? | | |
+| 1 | Each of the four dropdowns announced as a pop-up button with **name *and* value** | Both, on all four | ✅ |
+| 2 | The four names as expected — *my car model variant · driving location · weather condition · travelling* | As expected | ✅ |
+| 3 | Tab order: skip link → 4 dropdowns → ⓘ → Learn more → out | As expected | ✅ |
+| 4 | **Name stability** — names unchanged after changing all four values | Names identical, only values changed | ✅ |
+| 5 | **The result panel, browsed** | **Chrome: neither the label nor the number announced — only the ⓘ button and the Learn more link.** Safari: both announced | ⚠️ see below |
+| 6 | The visible number reachable at all | **Was `aria-hidden` — absent from the tree in every browser.** After the fix, Safari announces *"600 km"* | ✅ **fixed** |
+| 7 | Does *"Estimated range"* come **twice**? | No. Once. The duplication this row was written to catch no longer exists | ✅ |
 | 8 | Live region on change — **how many announcements**, and is the count-up silent? | | |
 | 9 | ⓘ with **Enter**, then with **Space** — does the modal open both ways? | | |
 | 10 | **On open: is the full paragraph announced, or skipped?** | | |
@@ -484,8 +483,31 @@ size. Safari first, Chrome as a second opinion — **browser agreement is itself
 | 14 | Rotor → Form Controls: 4 dropdowns + 2 buttons, no blank, no duplicate | | |
 | 15 | Rotor → Landmarks: banner + main present | | |
 
-**The four rows that carry the open questions** — 7, 10, 11 and 6. See §7 for what each one settles
-and, for row 7, the remedy that is deliberately *not* pre-applied.
+### What rows 5–7 settled
+
+**Row 6 was a genuine defect, and only a screen reader could have found it.** `#nala-value` — the
+visible `600 km`, the app's headline output — carried `aria-hidden="true"`, so the number was absent
+from the accessibility tree in **every** browser. The only readable copy lived in a 1×1 clipped
+`aria-live` region, and a live region's job is to *interrupt on change*, not to be browsed. Net
+effect: browsing the result panel never reached the result. **axe, WAVE and Nu all passed this**, at
+96 rules, across ten runs — 0 violations throughout. Fixed in `7e69034`: the value is no longer
+hidden, and the live region is empty at rest and populated only transiently. Confirmed by ear
+afterwards.
+
+**Row 5 is a browser-pairing limitation, not a code defect.** In **Chrome**, VoiceOver announced
+only the two focusable things in the panel — the ⓘ button and the Learn more link — and skipped the
+static label and number. In **Safari** both are announced. The label is a normal 124×19 visible
+unclipped node and is present and unignored in **Chrome's own** accessibility tree, so the tree is
+not at fault; this is VoiceOver's consumption of it. **VoiceOver is designed for Safari** — §1 and §6
+both say to treat Safari as the record and Chrome as a second opinion, and this is why.
+
+> **The fix that was considered and rejected: making the label and number focusable.** Static text in
+> the focus order means a keyboard user Tabs through the words "Estimated range" and "600 km" to get
+> anywhere — junk stops that help nobody and slow down the users the change is meant to serve. It
+> would also have masked a browser gap as a markup problem. `#label-wheel` in the Visualizer's pack
+> is the counter-example on record: plain text, skipped by Tab, **announced by the VO cursor**.
+
+**Rows still carrying open questions** — 8, 10 and 11. See §7 for what each settles.
 
 **Row 10 is the one the Visualizer's run actually caught.** On that component, opening the
 disclaimer put focus on the close button — *after* the text — so the panel's content was never

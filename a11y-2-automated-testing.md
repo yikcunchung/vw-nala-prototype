@@ -43,7 +43,7 @@ The local `index.html` and the deployed build are **byte-identical**.
 | **WAVE Evaluation Tool 3.3.1.0** | ◐ **Hosted done, extension outstanding** | Real engine via `wave.webaim.org/report#/<url>` against the public URL: **0 errors, 0 contrast errors, AIM 10/10**. Valid here — this app does not lazy-build, so hosted WAVE saw the real page. The **extension** run remains, and is the only way to reach the **modal-open** state — §6 Run 2 |
 | **Zoom 400% and 320 × 256 px** | ✅ **Done** | `320×256 @ deviceScaleFactor 4`. **dsf 1 is a small screen, not a zoomed one** |
 | **Operated via the keyboard** | ✅ **Done** | Driven with real `Input.dispatchKeyEvent` |
-| **NVDA 2026.1.1.55980** | ❌ **Not done** | The one real gap. Protocol in §6 Run 1, checklist in §7 |
+| **NVDA 2026.1.1.55980** | ❌ **Not done** | The one real screen-reader gap. **VoiceOver has now been run — §9.1** — and is a documented deviation, not a substitute. Protocol §6 Run 1, checklist §7, results §9.1 |
 | **PAC 26.1.0.0** | ⚪ **Not applicable** | PAC checks PDF/UA-1 (ISO 14289-1). This app ships no PDFs (`*.pdf` count: 0). If brochures or price lists are added they are a separate surface under EN 301 549 clause 10 |
 
 ### NVDA vs VoiceOver — a deviation to record
@@ -246,8 +246,14 @@ found, and neither axe nor WAVE nor Nu saw any of them.
 
 # 5. What automation will never close
 
-**Real screen-reader output has never been tested.** The accessibility tree confirms what is
-*exposed*; NVDA, JAWS and VoiceOver differ in what they *announce*. No headless pass closes this.
+**Screen-reader output is no longer untested — and the first run proved the point.** VoiceOver has
+been run against live (§9.1) and found `#nala-value` unreachable: the app's headline number carried
+`aria-hidden="true"`, leaving a 1×1 clipped live region as the only readable copy. **axe at 96 rules,
+WAVE and Nu all passed it**, across ten runs, zero violations. Nothing but a screen reader was ever
+going to catch it.
+
+**What remains untested is NVDA**, which the protocol names. NVDA, JAWS and VoiceOver differ in what
+they *announce*, and one of those three agreeing is not the other two.
 
 **A name can be present, unique, and wrong.** Every automated check here passes on a control
 labelled "button". Names must be read against what they describe.
@@ -457,13 +463,17 @@ is exactly what scores clean on a build with a Level A naming failure.
 Where the runs from §6 get recorded, graded against §7. **Same rule as the Visualizer's pack: an
 empty row is not a pass.** A blank cell means nobody has listened yet.
 
-## 9.1 Screen reader — VoiceOver — ◐ IN PROGRESS (steps 1–4 of 11 done)
+## 9.1 Screen reader — VoiceOver — ✅ RUN (13 of 15 rows evidenced)
 
 **VoiceOver, macOS 26.5.2 (25F84), Chrome and Safari**, against the live deployment. Steps 1–3 run
 at `b59ee16`; step 4 re-run at `7e69034` after the fix it produced. Window size not recorded.
 
-**This run has already justified itself: it found a defect no tool reported.** Rows 5–7 below.
-Rows 8–15 are still empty and an empty row is not a pass.
+**Safari is the record; Chrome was the second opinion and disagreed once — row 5.** All 11 protocol
+steps were driven. **The run found one real defect that every tool passed** (row 6) and settled two
+design decisions that were being held open on theory (rows 10 and 7).
+
+**What it does not close:** NVDA — see §9.4. This is a VoiceOver pass, and VoiceOver is a documented
+deviation from the named protocol, not a substitute.
 
 | # | Item | Heard | Verdict |
 |---|---|---|---|
@@ -474,14 +484,19 @@ Rows 8–15 are still empty and an empty row is not a pass.
 | 5 | **The result panel, browsed** | **Chrome: neither the label nor the number announced — only the ⓘ button and the Learn more link.** Safari: both announced | ⚠️ see below |
 | 6 | The visible number reachable at all | **Was `aria-hidden` — absent from the tree in every browser.** After the fix, Safari announces *"600 km"* | ✅ **fixed** |
 | 7 | Does *"Estimated range"* come **twice**? | No. Once. The duplication this row was written to catch no longer exists | ✅ |
-| 8 | Live region on change — **how many announcements**, and is the count-up silent? | | |
-| 9 | ⓘ with **Enter**, then with **Space** — does the modal open both ways? | | |
-| 10 | **On open: is the full paragraph announced, or skipped?** | | |
-| 11 | **Can `VO`+arrow escape the dialog?** (≥ 8 presses) | | |
-| 12 | Escape / × / click-outside — all three close **and** re-announce the ⓘ button | | |
+| 8 | Live region on change — **how many announcements**, and is the count-up silent? | The select's own new value first, then *"estimated range x km"*. **No digit-by-digit count-up** | ✅ |
+| 9 | ⓘ with **Enter**, then with **Space** — does the modal open both ways? | Both | ✅ |
+| 10 | **On open: is the full paragraph announced, or skipped?** | **The whole paragraph is announced.** The `h2` headline is **not** | ✅ / see below |
+| 11 | **Can `VO`+arrow escape the dialog?** (≥ 8 presses) | No. Cycles between the paragraph and Close only | ✅ |
+| 12 | Escape / × / click-outside — all three close **and** re-announce the ⓘ button | All three return focus to the ⓘ button | ✅ |
 | 13 | "Learn more" announced as a **link**, with destination and new-tab warning | | |
-| 14 | Rotor → Form Controls: 4 dropdowns + 2 buttons, no blank, no duplicate | | |
+| 14 | Rotor → Form Controls: 4 dropdowns + 2 buttons, no blank, no duplicate | The focusable set is listed | ✅ |
 | 15 | Rotor → Landmarks: banner + main present | | |
+
+Rows 13 and 15 are blank because they were not separately reported. **Blank is not a pass.**
+Answers are paraphrase, not verbatim transcript — the Caption Panel was not enabled, so exact
+utterances were not captured. Good enough to settle every decision below; not a substitute for a
+transcript if a formal audit asks for one.
 
 ### What rows 5–7 settled
 
@@ -507,7 +522,26 @@ both say to treat Safari as the record and Chrome as a second opinion, and this 
 > would also have masked a browser gap as a markup problem. `#label-wheel` in the Visualizer's pack
 > is the counter-example on record: plain text, skipped by Tab, **announced by the VO cursor**.
 
-**Rows still carrying open questions** — 8, 10 and 11. See §7 for what each settles.
+### Row 10 — the dialog headline, a recorded trade-off
+
+**The paragraph is announced and the `h2` headline is not**, because initial focus is placed on the
+paragraph. This is deliberate and **must not be "fixed" by moving focus to the dialog container.**
+Focus placement forces a choice and cannot satisfy both:
+
+| Focus lands on | Headline | Paragraph |
+|---|---|---|
+| The dialog container | announced | **skipped** — exactly the Visualizer's recorded defect |
+| **The paragraph** (current) | skipped | **fully announced** |
+
+Content wins: the dialog exists to deliver that paragraph. Nothing fails SC 4.1.2 — the dialog *is*
+named, via `aria-labelledby` → the `h2`; VoiceOver simply does not speak the boundary when focus
+starts on a child. The user also arrives by activating a button named *"More information about the
+estimated range"*, so the context is already given, and the visible `h2` still serves sighted users.
+
+**`aria-describedby` on the dialog was rejected**, not overlooked. It is the canonical way to get
+both, but that paragraph is ~800 characters and long description text is known to be truncated or
+dropped by some readers. Trading a reliably-announced paragraph for a possibly-truncated one is a
+bad swap. If it is ever revisited, A/B it **by ear** — no tool can measure truncation.
 
 **Row 10 is the one the Visualizer's run actually caught.** On that component, opening the
 disclaimer put focus on the close button — *after* the text — so the panel's content was never
@@ -573,17 +607,18 @@ audit naming NVDA will not accept VoiceOver evidence for that line item. §1 has
 
 > *"This app meets WCAG 2.2 A/AA on every automated and runtime check available — axe at 96 rules
 > across five viewports and two states, WAVE, the accessibility tree, real key events and literal
-> 400% zoom, all against the live deployment — with **one non-text-contrast failure inherited from
-> the core component library**, two discretionary decisions recorded, and **screen-reader
-> verification still outstanding**."*
+> 400% zoom, all against the live deployment — **and has been verified against VoiceOver on Safari**,
+> with **one non-text-contrast failure inherited from the core component library**, four
+> discretionary decisions recorded, and **NVDA verification still outstanding**."*
 
 **What it must not say: "fully compliant."** Three specific reasons, not hedging:
 
 1. **SC 1.4.11 genuinely fails.** The `<select>` border is 2.29:1 against the page background and
    needs 3:1. It is a core design-system value this prototype does not own, which changes *who
    fixes it*, not *whether it fails*. No tool reports it.
-2. **No screen reader has been run.** §9.1 is empty. The accessibility tree proves what is
-   *exposed*; NVDA, JAWS and VoiceOver differ in what they *announce*.
+2. **Only one screen reader has been run.** VoiceOver on Safari, §9.1. The protocol names **NVDA**,
+   which has not been run, and readers differ in what they *announce*. Two rows of §9.1 are also
+   still blank, and the run was recorded as paraphrase rather than a captured transcript.
 3. **Two recorded decisions rest on readings an auditor may reject** — SC 2.5.3 on all four select
    names, and the 2.4.4 link text. Both are written down rather than smoothed over.
 

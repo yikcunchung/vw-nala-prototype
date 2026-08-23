@@ -299,8 +299,10 @@ one thing the hosted service cannot do: **the modal-open state.**
 3. **Now the part only the extension can do.** Turn WAVE off, **open the ⓘ modal**, turn WAVE on
    again. Read the three counts a second time.
 4. Note the `.sr-only` nodes. WAVE does not treat a 1×1 clip as hidden and may report contrast on
-   `#nala-live`, `#select-veh-hint` or `#select-wea-hint`. That is a **known artifact** — those are
-   clipped, never rendered, and `#nala-live` is explicitly `color: #fff` for this reason.
+   `#nala-live` or on the `.sr-only` tail inside the "Learn more" link. That is a **known artifact** —
+   both are clipped, never rendered, and `#nala-live` is explicitly `color: #fff` for this reason.
+   (The old `#select-veh-hint` / `#select-wea-hint` spans no longer exist — the selects now use a
+   direct `aria-label`.)
 
 > **Expect 1 alert, "Possible heading."** It is the bold *Estimated range* label. It is a label for
 > the readout, not a section heading. Not a defect — do not "fix" it into an `<h3>`.
@@ -341,16 +343,22 @@ Tick only what you observed. **An untested box is not a pass.**
 
       | Control | Expected name | Expected value |
       |---|---|---|
-      | `#select-veh` | "of my ID.7 variant" | "Pro Match 286 PS" |
-      | `#select-env` | "when I mostly drive" | "in the city" |
-      | `#select-wea` | "in which weather" | "warm" |
-      | `#select-occ` | "weather and I am driving" | "alone" |
+      | `#select-veh` | "my car model variant" | "Pro Match 286 PS" |
+      | `#select-env` | "driving location" | "in the city" |
+      | `#select-wea` | "weather condition" | "warm" |
+      | `#select-occ` | "number of people in the car" | "alone" |
 
-- [ ] **Step 2** — `#select-occ` is named with the whole preceding clause. Record whether that is
-      merely odd or actively confusing. It is accurate and unique, so it passes either way.
-- [ ] **Step 3** — record the literal utterance for `#select-wea`. Expected: the sr-only word
-      *"which"* is spoken **between** the two visible words. This is the evidence for the one
-      recorded SC 2.5.3 decision in `a11y-1-criteria.md`.
+- [ ] **Step 2 — name stability.** Change all four values, then Tab back through them. **Every name
+      must be unchanged.** The previous `aria-labelledby` scheme failed this: `#select-veh`'s name
+      contained a token JS rewrites, so the name moved with the value.
+- [ ] **Step 3 — the SC 2.5.3 judgement call.** The names deliberately do **not** echo the visible
+      sentence prose. Listen to a dropdown, then read the words on screen around it, and record
+      whether a speech-input user looking at that sentence would plausibly say the name. This is the
+      evidence for the recorded 2.5.3 decision in `a11y-1-criteria.md` — the reading being relied on
+      is that the prose is *context*, not a label.
+- [ ] **Step 3 — the link-out.** `#nala-cta` is an `<a href>`, not a button. Confirm it is announced
+      as a **link**, that the name carries destination and the new-tab warning, and that activating
+      it opens `volkswagen.co.uk` in a new tab.
 - [ ] **Step 4 — the one thing most likely to need a change.** Expected order is:
 
       ```

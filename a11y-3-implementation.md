@@ -92,8 +92,9 @@ If a control has a visible text label, the accessible name must **contain that t
 ```jsx
 // ✗ visible "Motor / Battery Capacity", name "Motor and battery capacity"
 //   one character — "/" written as the word "and" — is a Level A failure
-// ✗ visible "in … weather", name "in which weather"  (a word spliced between)
-// ✓ append, never splice:  visible "of my ID.7", name "of my ID.7 variant"
+// ✗ visible "Learn more", name "Read more about range"   (visible text absent)
+// ✓ append, never splice:  visible "Learn more",
+//   name "Learn more about range on volkswagen.co.uk (opens in a new tab)"
 ```
 
 **axe has no rule for this at all.** It must be checked by hand, against the accessibility tree.
@@ -448,24 +449,32 @@ assembled from the sentence fragments around it.
 **The rule that works: append, never splice.**
 
 ```html
-<!-- ✓ #select-veh — visible "of my ID.7", sr-only "variant" appended at the END -->
-<span id="select-w1">of my</span>
-<span id="select-veh-family" class="fl-label">ID.7</span>
-<select aria-labelledby="select-w1 select-veh-family select-veh-hint">…</select>
-<span id="select-veh-hint" class="sr-only">variant</span>
+<!-- ✓ A concise, STABLE aria-label. Not stitched together from the visible
+     sentence: that made the name move with the value, because JS rewrites the
+     ID.7 token. A name must not change when the value changes. -->
+<span id="select-w1">of my</span>                      <!-- prose, not a label -->
+<span id="select-veh-family" class="fl-label">ID.7</span>  <!-- the VALUE's family -->
+<select id="select-veh" aria-label="my car model variant">…</select>
 
-<!-- ✗ #select-wea — visible "in … weather", name "in which weather"
-     the sr-only word is spliced BETWEEN the two visible words, so the visible
-     string is no longer contiguous in the name -->
+<!-- ✗ do NOT stitch a name out of the visible sentence spans:
+     aria-labelledby="select-w1 select-veh-family select-veh-hint"
+     yields "of my ID.7 variant", and JS rewrites the ID.7 token — so the
+     NAME MOVES WITH THE VALUE. Names must be stable. -->
 ```
 
-`#select-wea` is the one recorded decision in `a11y-1-criteria.md`. Per-word it passes; a speech-input
-user saying "in weather" would not match. Fix by moving "which" to the end, or dropping it.
+The four names are *my car model variant*, *driving location*, *weather condition* and *number of
+people in the car* — concise, stable, and describing purpose rather than echoing the prose. That is
+a **recorded 2.5.3 decision**, not a free win: see `a11y-1-criteria.md`. It rests on reading the
+sentence words as context and the on-control text as the value, so that no select has a visible
+*label*. An auditor may disagree.
 
-**`syncEnvLabel()` rewrites `aria-label` at the 400px breakpoint** — the visible text changes from
-"when I mostly drive" to "when I drive", and the name follows it. That is exactly right, and it is
-the kind of thing that breaks silently: **if the visible text is responsive, the name must be too.**
-Verify 2.5.3 at every breakpoint, not just the widest.
+**A responsive name is a trap worth knowing even though it is now gone.** This app previously ran a
+`syncEnvLabel()` that rewrote the environment select's `aria-label` when the visible copy changed at
+the 400px breakpoint — because *if a name is derived from visible text and that text is responsive,
+the name must be responsive too, or 2.5.3 breaks at one width only.* The concise-label scheme
+removes the whole class of bug: a name that never derives from visible copy cannot drift from it.
+**If you reintroduce visible-text-derived names, verify 2.5.3 at every breakpoint, not just the
+widest.**
 
 **`button#nala-info-btn` measures 23.797 × 24**, not 24×24 — `offsetWidth` rounds up to 24 and
 `getBoundingClientRect()` does not. It passes SC 2.5.8 comfortably because `::before` makes the real
@@ -473,6 +482,7 @@ target ~36.7 × 36.8 (C1), and it has 66px of clearance besides. But **a manual 
 border box will read 23.8 and flag it**, so the `::before` is load-bearing for the explanation even
 though it is not load-bearing for the pass. Do not remove it.
 
-**One naming oddity, not a failure:** `select#select-occ` is named "weather and I am driving" — it
+**Superseded — kept only so the reasoning is not repeated.** `select#select-occ` used to be named
+"weather and I am driving", inherited wholesale from the visible span. It
 opens with a word belonging to the *previous* control. Correct per 2.5.3, mildly confusing to hear.
 Worth revisiting if the sentence is ever restructured.

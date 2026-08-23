@@ -114,7 +114,7 @@ criteria are not required and are not listed.
 | **2.4.1** | Bypass Blocks | A | Yes | ✅ Pass | `a.skip-link → #nala-main`; the target exists and the link is the first tab stop, with a custom `2px solid #C86C03` `:focus-visible` ring at `outline-offset: -4px`. |
 | **2.4.2** | Page Titled | A | Yes | ✅ Pass | `<title>Volkswagen NaLa</title>` — descriptive and unique. |
 | **2.4.3** | Focus Order | A | Yes | ✅ Pass | Focus order follows the sentence, which is also the visual order. All 7 controls reached in DOM order at 1440 and at 320×256 @ dsf 4. Opening the modal moves focus to its close button; closing returns it to the invoking button — both driven and confirmed. |
-| **2.4.4** | Link Purpose (In Context) | A | No | ⚪ N/A | No links other than the skip link, which is named. |
+| **2.4.4** | Link Purpose (In Context) | A | Yes | ✅ Pass | Two links. The skip link is named. The **"Learn more" CTA is an external link-out** to `volkswagen.co.uk/…/range-simulator.html`; bare *"Learn more"* is the classic non-descriptive link text, so an appended `.sr-only` tail gives it purpose and destination: full name **"Learn more about range on volkswagen.co.uk (opens in a new tab)"**. Appended, never spliced, so the visible text stays a contiguous prefix. `rel="noopener noreferrer"` with `target="_blank"`. |
 | **2.4.5** | Multiple Ways | AA | No | ⚪ N/A | A standalone single page. SC 2.4.5 applies to a *set* of web pages; there is no set. |
 | **2.4.6** | Headings and Labels | AA | Yes | ✅ Pass | `h1` "What is the range …" and, inside the dialog, `h2#nala-range-modal-title` "Estimated range" — no skipped levels. Every control's label describes its purpose. |
 | **2.4.7** | Focus Visible | AA | Yes | ✅ Pass | Every focused control shows a `2px solid #C86C03` outline — verified on all stops at both viewports and in both states. Contrast of the ring: 3.44:1 on cream, 4.22:1 on navy, 3.75:1 on the modal white; all clear the 3:1 requirement. |
@@ -127,7 +127,7 @@ criteria are not required and are not listed.
 |---|---|---|---|---|---|
 | **2.5.1** | Pointer Gestures | A | Yes | ✅ Pass* | No path-based or multipoint gesture. Every control is a single tap or click. |
 | **2.5.2** | Pointer Cancellation | A | Yes | ✅ Pass* | All activation is on the up-event — native `<button>` and `<select>` semantics; no `mousedown` handlers. |
-| **2.5.3** | Label in Name | A | Yes | ⚖️ Decide | Most controls exact. **Decide:** `#select-wea` reads "in `[warm ▾]` weather" but is named "in which weather" — the sr-only word "which" is spliced between the two visible words, so the contiguous visible string is not a substring of the name. Both visible words appear in order, so a per-word reading passes; a strict speech-input test ("click in weather") would not match. |
+| **2.5.3** | Label in Name | A | Yes | ⚖️ Decide | **The decision changed shape — the previous `#select-wea` splice no longer exists.** Every select now carries a concise `aria-label` that deliberately does *not* mirror the surrounding sentence prose. **The reading this rests on:** the words around each dropdown (*"of my"*, *"in"*, *"weather and I am driving"*) are running prose and the on-control text is the *value*, so no select has a visible *label* and 2.5.3 is satisfied trivially — the same position already settled for the Visualizer's `#select-model-lg`. **The counter-reading an auditor could take:** in a talking-sentence UI the prose *is* the label, in which case all four names would fail. Recorded, not hidden. **Why the new names are still the right call:** the old scheme made `#select-veh`'s name **mutate with its value** (JS rewrote the `ID.7` token feeding it) — names must be stable — and named the occupancy select *"weather and I am driving"*, which opens with a word about the previous control and never mentions people. |
 | **2.5.4** | Motion Actuation | A | No | ⚪ N/A | No device-motion or user-motion actuation. |
 | **2.5.7** | Dragging Movements | AA | No | ⚪ N/A | No dragging movement anywhere — no slider, no drag handle. |
 | **2.5.8** | Target Size (Minimum) | AA | Yes | ✅ Pass | No target under 24×24. The smallest, `button#nala-info-btn`, measures **23.797 × 24** as a border box but its real pointer target is **~36.7 × 36.8** via a transparent `::before` — hit-tested by ray-casting `elementFromPoint`, all four corners at ±12 return the button. The modal close button is a plain **32 × 32**. axe `target-size`: **7 pass / 0 violations** default, **8 pass / 0 violations** modal-open. |
@@ -160,7 +160,7 @@ criteria are not required and are not listed.
 | SC | Name | Lvl | Relevant | Status | Evidence / what to do |
 |---|---|---|---|---|---|
 | **3.3.1** | Error Identification | A | No | ⚪ N/A | No input can be in error. Every control is a closed `<select>` with valid options only. |
-| **3.3.2** | Labels or Instructions | A | Yes | ✅ Pass | Every control is labelled by the sentence it sits in, via `aria-labelledby`. |
+| **3.3.2** | Labels or Instructions | A | Yes | ✅ Pass | Every control carries a concise `aria-label` describing its purpose — *my car model variant*, *driving location*, *weather condition*, *number of people in the car*. The visible sentence supplies the same meaning to sighted users. |
 | **3.3.3** | Error Suggestion | AA | No | ⚪ N/A | No validated input, so no error to suggest a correction for. |
 | **3.3.4** | Error Prevention (Legal, Financial, Data) | AA | No | ⚪ N/A | Nothing is submitted, purchased, or legally committed. The app computes an estimate and stores nothing. |
 | **3.3.7** | Redundant Entry | A | No | ⚪ N/A | No multi-step process re-asks for information. |
@@ -175,7 +175,7 @@ criteria are not required and are not listed.
 | SC | Name | Lvl | Relevant | Status | Evidence / what to do |
 |---|---|---|---|---|---|
 | **4.1.1** | Parsing | A | Yes | ✅ Pass | Nu HTML validator: **0 errors**. Obsolete in WCAG 2.2 but normative under EN 301 549 clause 9.4.1.1, so it is checked and kept. |
-| **4.1.2** | Name, Role, Value | A | Yes | ✅ Pass | **AX tree (1440×900): 84 unignored nodes / 64 named / 0 unnamed / 0 duplicate role+name in the default state; 103 / 80 / 0 / 0 with the modal open.** Every `<select>` exposes role, name and value. `#nala-info-btn` declares `aria-haspopup="dialog"`; `#nala-range-modal` is `role="dialog"` + `aria-modal="true"` + `aria-labelledby`. **There is no `aria-expanded` anywhere** — the disclosure pattern was removed with the details panel, and `#nala-cta` is now inert in this prototype, so it correctly advertises no state it does not maintain. |
+| **4.1.2** | Name, Role, Value | A | Yes | ✅ Pass | 0 unnamed and 0 duplicate role+name in both states. Every `<select>` exposes role, name and value, and **the four names are stable — verified identical after changing all four values**, which the previous `aria-labelledby` scheme was not. `#nala-cta` is a real `<a href>` exposing **`role=link`**, not a button. `#nala-info-btn` declares `aria-haspopup="dialog"`; `#nala-range-modal` is `role="dialog"` + `aria-modal="true"` + `aria-labelledby`. **No `aria-expanded` anywhere** — nothing advertises a state it does not maintain. |
 | **4.1.3** | Status Messages | AA | Yes | ✅ Pass | `#nala-live` (`aria-live="polite"`) announces the recomputed range without moving focus. Tracked correctly across state changes: 600 → 595 km driven and confirmed. |
 
 ---
@@ -192,7 +192,7 @@ criteria are not required and are not listed.
 
 | SC | Decision |
 |---|---|
-| **2.5.3** Label in Name | `#select-wea` reads "in `[warm ▾]` weather" and is named "in which weather". The sr-only word "which" sits between the two visible words, so the visible string is not contiguous in the name. Per-word it passes; a speech-input user saying "in weather" would not match. Either drop the sr-only word or move it to the end, as `#select-veh` already does ("of my ID.7 **variant**"). **Rule: append, never splice.** |
+| **2.5.3** Label in Name | The four selects carry concise `aria-label`s (*my car model variant*, *driving location*, *weather condition*, *number of people in the car*) that deliberately do **not** echo the surrounding sentence prose. This passes on the reading that the prose is *context* and the on-control text is the *value*, so no select has a visible **label** — the position already settled for the Visualizer's `#select-model-lg`. An auditor who instead treats a talking-sentence UI's prose as the label would fail all four. **Record the position; do not quietly re-stitch the names out of the visible words** — that is what made `#select-veh`'s name mutate with its value. |
 
 **Automated runs: complete.**
 - axe-core 4.13.0, **96 rules** (all nine default-disabled rules force-enabled, including `target-size`): **0 violations** across 5 viewports × 2 states, 0 JS exceptions.

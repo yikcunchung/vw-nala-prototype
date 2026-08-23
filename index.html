@@ -365,6 +365,8 @@ body {
   padding: 11px 31px; cursor: pointer;
   display: flex; align-items: center; justify-content: center; gap: 4px;
   transition: background 0.15s, color 0.15s, border-color 0.15s;
+  text-decoration: none;   /* it is an <a> now, not a <button> */
+  box-sizing: border-box;
 }
 .nala-cta:hover {
   background: var(--button-secondary-hover, #CCBDAB);
@@ -655,8 +657,7 @@ body {
               <span id="select-veh-sizer">GTX 4MOTION 340 PS</span>
             </span>
             <span class="fl-label" id="select-veh-family">ID.7</span>
-            <span class="sr-only" id="select-veh-hint">variant</span>
-            <select id="select-veh" aria-labelledby="select-w1 select-veh-family select-veh-hint">
+            <select id="select-veh" aria-label="my car model variant">
               <optgroup label="ID.7">
                 <option value="pro" selected>Pro Match 286 PS</option>
                 <option value="pros">Pro S Match 286 PS</option>
@@ -674,7 +675,7 @@ body {
           <!-- Where -->
           <span class="fl-select fl-select--plain">
             <span class="fl-sizer" aria-hidden="true"><span id="select-env-sizer">on the motorway</span></span>
-            <select id="select-env" aria-label="when I mostly drive">
+            <select id="select-env" aria-label="driving location">
               <option value="city" selected>in the city</option>
               <option value="country">on country roads</option>
               <option value="motorway">on the motorway</option>
@@ -689,8 +690,7 @@ body {
           <!-- Weather -->
           <span class="fl-select fl-select--plain">
             <span class="fl-sizer" aria-hidden="true"><span id="select-wea-sizer">warm</span></span>
-            <span class="sr-only" id="select-wea-hint">which weather</span>
-            <select id="select-wea" aria-labelledby="select-w3 select-wea-hint">
+            <select id="select-wea" aria-label="weather condition">
               <option value="warm" selected>warm</option>
               <option value="mild">mild</option>
               <option value="cold">cold</option>
@@ -705,7 +705,7 @@ body {
           <!-- Occupancy -->
           <span class="fl-select fl-select--plain">
             <span class="fl-sizer" aria-hidden="true"><span id="select-occ-sizer">with a passenger</span></span>
-            <select id="select-occ" aria-labelledby="select-w4">
+            <select id="select-occ" aria-label="number of people in the car">
               <option value="alone" selected>alone</option>
               <option value="pair">with a passenger</option>
               <option value="family">with the family</option>
@@ -739,7 +739,13 @@ body {
           <p class="sr-only" id="nala-live" aria-live="polite">Estimated range 600 kilometres.</p>
         </div>
 
-        <button type="button" class="nala-cta" id="nala-cta">Learn more</button>
+        <!-- A real link-out, so it must expose role=link, not role=button. The
+             sr-only tail is APPENDED, never spliced, so the visible "Learn more"
+             stays a contiguous substring of the accessible name (SC 2.5.3) while
+             2.4.4 gets a purpose and the user gets a new-tab warning. -->
+        <a class="nala-cta" id="nala-cta"
+           href="https://www.volkswagen.co.uk/en/electric-and-hybrid/charging-and-range/range/range-simulator.html"
+           target="_blank" rel="noopener noreferrer">Learn more<span class="sr-only"> about range on volkswagen.co.uk (opens in a new tab)</span></a>
       </div>
 
       <p class="nala-consumption" id="nala-consumption">Energy consumption combined 16.6 - 15.2 kWh/100 km 4  &bull;CO&#8322; emissions combined 0 g/km 4  &bull;CO&#8322; class A</p>
@@ -806,14 +812,6 @@ body {
   var rangeModalBody = $('nala-range-modal-body');
 
   var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  /* ── The 375 frame uses shorter copy; keep the accessible name of the
-        environment select identical to whichever string is visible. ── */
-  function syncEnvLabel() {
-    var lng = $('select-w2-long');
-    var visible = lng && window.getComputedStyle(lng).display !== 'none';
-    env.setAttribute('aria-label', visible ? 'when I mostly drive' : 'when I drive');
-  }
 
   var animFrame = null;
   function renderValue(target) {
@@ -924,10 +922,8 @@ body {
   });
 
   [veh, env, wea, occ].forEach(function (s) { s.addEventListener('change', update); });
-  window.addEventListener('resize', syncEnvLabel);
 
   update();
-  syncEnvLabel();
   /* First paint must not animate away from the designed 600 km. */
   valueEl.textContent = valueEl.textContent;
 })();

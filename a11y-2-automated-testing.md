@@ -64,8 +64,8 @@ Bare `axe.run(document)` plus all nine default-disabled rules force-enabled (**9
 axe-core 4.13.0). Viewports: 1440×900, 768×1024, 390×844, 320×256 @ dsf 1, and 320×256 @ dsf 4
 (literal 400% zoom). **Each viewport run twice — default state and modal-open state** (10 runs).
 
-**Run against the live deployment**, not a local copy, at commit `40b75d8` — and the live
-`index.html` was confirmed byte-for-byte identical to source first (sha256 `0a9f6652d7815e81…`).
+**Run against the live deployment**, not a local copy, at commit `b59ee16` — and the live
+`index.html` was confirmed byte-for-byte identical to source first (sha256 `4fb0bbd45716bec5…`).
 Auditing localhost and *reporting* it as live is the easiest way to publish a figure that does not
 describe what ships; see §3.
 
@@ -83,18 +83,30 @@ Measured at 1440×900 via `Accessibility.getFullAXTree` (unignored nodes only).
 
 | Measure | Default | Modal open |
 |---|---|---|
-| Nodes | 84 | 103 |
-| Named | 64 | 80 |
+| Nodes | 80 | **20** |
+| Named | 62 | 18 |
 | **Unnamed interactive / graphic** | **0** | **0** |
 | Duplicate role+name | 0 | 0 |
-| Focusable controls | 7 | 9 |
+| Real Tab stops | 7, then out of the document | **2** |
+
+**The modal-open figure is the interesting one: 80 nodes → 20.** `inert` on `#topbar` and
+`#nala-main` does not merely block focus — it removes the background from the **accessibility tree
+altogether**. Before `inert` was applied the same measurement read 103 nodes, i.e. the whole page
+was still exposed behind an `aria-modal="true"` dialog. This is what makes the containment real
+rather than advisory, and it is why the virtual-cursor check in §7 is expected to pass: there is
+nothing behind the dialog left to navigate to.
+
+> **Do not count focusable elements with a DOM query when `inert` is in play.**
+> `querySelectorAll(...).filter(el => el.tabIndex >= 0 && el.offsetParent !== null)` returns **9**
+> with the modal open, because neither `tabIndex` nor `offsetParent` reflects `inert`. Driving real
+> `Tab` keys returns **2**. The DOM query is the wrong instrument here.
 
 > No unnamed node has ever been exposed here — every inline `<svg>` already carried
 > `aria-hidden="true"` or a name, including the modal's close glyph.
 
 ## WAVE — real engine, live public URL
 
-Run against `https://yikcunchung.github.io/vw-nala-prototype/` at commit `40b75d8`, and re-run
+Run against `https://yikcunchung.github.io/vw-nala-prototype/` at commit `b59ee16`, and re-run
 after every subsequent change to `index.html` — an earlier run against the pre-dialog build is not
 evidence for this one.
 

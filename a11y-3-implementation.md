@@ -20,32 +20,25 @@ diffing against. Where the two disagree, §1–§6 win.
 
 ## Start here — the two defects that shipped, and that no tool caught
 
-Both were found by driving the build, not by scanning it. **axe at 96 rules, WAVE and Nu passed both.**
+`README.md` carries the six rules a porting developer needs, code-first. This file is the detail
+behind them, and the spec an auditor checks against. Both defects were found by driving the build,
+not by scanning it: **axe at 96 rules, WAVE and Nu passed both.**
 
 | Rule | What went wrong | Cost if missed |
 |---|---|---|
 | **A6** | The visible result carried `aria-hidden="true"` — because it animates and must not be counted aloud — leaving a **1×1 clipped `aria-live` region as the only readable copy**. A live region's job is to interrupt on change, not to be browsed. | **The app's entire output was unreachable.** A screen-reader user could operate every control and never learn the answer. Found by ear; invisible to every tool in the required toolchain. |
 | **B8** | The "Learn more" CTA was a `<button>` with no handler: focusable, announced as a button, and doing nothing on activation. | An interaction dead end. Worse than the control not existing, because it advertises an affordance it does not have. |
 
-Two more that cost real time and are worth knowing before you start:
+Two process traps:
 
-- **A `role="group"` you did not need.** The result panel's implicit grouping meant `VO+Right` at the
-  outer level announced only the two focusable children and skipped the label and the number. A
-  tester reasonably concluded the panel was unreadable. It was not — it needed `VO+Shift+Down`. **Do
-  not add grouping to a readout**, and see B7.
-- **VoiceOver + Chrome is not the pairing to test in.** Static text present and unignored in
-  *Chrome's own* accessibility tree went unannounced there and read fine in Safari. Test VoiceOver in
-  **Safari**; use Chrome only as a second opinion, and record disagreements rather than treating
-  either as ground truth.
+- **An implicit group around the readout** made `VO+Right` announce only the two focusable children
+  and skip the label and the number; it needed `VO+Shift+Down`. Do not group a readout — see B7.
+- **VoiceOver + Chrome skipped static text that Safari announced** — text present and unignored in
+  *Chrome's own* accessibility tree. Test VoiceOver in **Safari**; Chrome is a second opinion only,
+  and disagreements get recorded rather than treated as ground truth.
 
-**The habit that would have caught all of it:** a name being present, unique and correct in the
-accessibility tree does not mean a user is ever told it. Check the *output*, not just the tree —
-and check it in the reader/browser pairing the protocol names.
-
-**This app also shipped with 0 unnamed graphics**, which is worth stating because it is the one place
-nala beat its siblings: range-simulator exposed **16**, cost-simulator 9, charging-time 7, and axe,
-WAVE and Nu reported clean on every one. A1 is the rule that keeps that fixed; the accessibility-tree
-assertion in the Definition of Done is the check that proves it.
+**This app shipped 0 unnamed graphics** — range-simulator exposed **16**, cost-simulator 9,
+charging-time 7, all clean to axe, WAVE and Nu. A1 keeps that fixed; §6 proves it.
 
 ---
 # 1. Semantics and naming
@@ -54,8 +47,8 @@ assertion in the Definition of Done is the check that proves it.
 
 `SC 1.1.1` · **Level A**
 
-Chrome maps a bare `<svg>` to `role=image`, `name=""`, `ignored=false`. It is therefore **exposed to
-assistive technology as an unnamed graphic** — it is not "decorative by default".
+Chrome maps a bare `<svg>` to `role=image`, `name=""`, `ignored=false`: an unnamed graphic exposed
+to assistive technology. It is not "decorative by default".
 
 ```jsx
 // ✗ exposed, unnamed — this is the defect that shipped
@@ -69,11 +62,10 @@ assistive technology as an unnamed graphic** — it is not "decorative by defaul
 ```
 
 > **No scanner catches this.** `svg-img-alt` and `role-img-alt` are **inapplicable** to an `<svg>`
-> with no `role`; `image-alt` only inspects `<img>`. axe, WAVE and Nu all returned clean on pages
-> carrying up to 16 of these. **The accessibility tree is the only check that works** — assert
-> `0` nodes with `role=image` that are unnamed and not `ignored`.
+> with no `role`; `image-alt` only inspects `<img>`. axe, WAVE and Nu ran clean on pages carrying up
+> to 16. **Assert the tree:** `0` `role=image` nodes unnamed and not `ignored`.
 
-**In React:** put it in the icon component itself, so it cannot be forgotten per call site.
+Decide it at the icon component, never per call site:
 
 ```jsx
 export const Icon = ({ label, ...p }) =>
@@ -87,8 +79,7 @@ export const Icon = ({ label, ...p }) =>
 
 `SC 4.1.2, 2.4.4` · **Level A**
 
-If a control's only content is an icon, the control carries `aria-label`; the icon inside it is
-`aria-hidden`. Never name the icon and leave the button unnamed — the name must sit on the thing
+The control carries `aria-label`; the icon inside is `aria-hidden`. The name must sit on the thing
 that is focusable.
 
 ---
@@ -102,19 +93,16 @@ that is focusable.
 ```
 
 **Do not stitch the name out of the surrounding sentence with `aria-labelledby`.** This app shipped
-that scheme and it failed: one of the referenced spans is rewritten by JS on every change, so the
-**accessible name moved with the value**. A name must be stable. See §7.
+that scheme and it failed: JS rewrites one referenced span on every change, so the accessible name
+moved with the value (§7). This is the exception, not new general advice — in a talking-sentence UI
+the prose is not a label and the on-control text is the value. Where a control does have a real
+visible label, prefer `aria-labelledby` pointing at it.
 
-That makes this app the exception to the usual advice, and the reason is worth understanding rather
-than generalising: in a talking-sentence UI the words around a control are **running prose**, and the
-text on the control is its **value**. Neither is a label. Where a control *does* have a real visible
-label, prefer `aria-labelledby` pointing at it — that guidance still holds elsewhere.
+The cost is a recorded **SC 2.5.3** decision: the names deliberately do not echo the visible prose,
+so an auditor reading that prose as the label would fail all four (`a11y-1`).
 
-The cost is a recorded **SC 2.5.3** decision: the names deliberately do not echo the visible prose.
-An auditor who reads that prose as the label would fail all four. Documented in `a11y-1`, not hidden.
-
-**Trap:** a `<select>`'s `<option>` text is **not** its label. An audit that compares concatenated
-option text against the accessible name will manufacture failures that do not exist.
+**Trap:** `<option>` text is **not** the label. Comparing concatenated option text against the
+accessible name manufactures failures that do not exist.
 
 ---
 
@@ -122,8 +110,8 @@ option text against the accessible name will manufacture failures that do not ex
 
 `SC 2.5.3` · **Level A**
 
-If a control has a visible text label, the accessible name must **contain that text, contiguously**
-— otherwise a speech-input user cannot activate it by saying what they see.
+The name must **contain the visible text, contiguously**, or a speech-input user cannot activate the
+control by saying what they see.
 
 ```jsx
 // ✗ visible "Motor / Battery Capacity", name "Motor and battery capacity"
@@ -134,7 +122,7 @@ If a control has a visible text label, the accessible name must **contain that t
 
 ```
 
-**axe has no rule for this at all.** It must be checked by hand, against the accessibility tree.
+**axe has no rule for this at all.** Check it by hand, against the accessibility tree.
 
 ---
 
@@ -155,11 +143,8 @@ skip link as the **first** tab stop, pointing at an id that exists.
 <p id="nala-live" class="sr-only" aria-live="polite" aria-atomic="true"></p>
 ```
 
-The region must already be in the DOM at load — injecting it and writing to it in the same tick is
-not announced. Write to it from **every** path that changes the result, not just the common one.
-
-**Empty at rest, populated only transiently.** This is not a style preference; it is what the
-VoiceOver run forced:
+It must already be in the DOM at load — injecting and writing in the same tick is not announced.
+Write from **every** path that changes the result. Empty at rest, populated transiently:
 
 ```js
 var liveTimer = null, firstPaint = true;
@@ -171,21 +156,19 @@ function announce(km) {
 }
 ```
 
-Three things that each matter:
+Three things, each load-bearing:
 
-- **`firstPaint`** — a region already populated at first paint is read as part of the page rather
-  than as an update.
-- **Cleared after use** — a permanently populated region is announced *again* when the user browses
+- **`firstPaint`** — a region populated at first paint reads as page content, not as an update.
+- **Cleared after use** — a permanently populated region is announced again when the user browses
   the panel, so the value is heard twice.
-- **3000ms, not less** — a region refilled too quickly is dropped outright by some readers, losing
-  the announcement altogether. That is worse than repeating.
+- **3000ms, not less** — a region refilled faster is dropped outright by some readers, losing the
+  announcement altogether.
 
-**The live region must never be the only readable copy of the result.** It was, here, and browsing
-the panel never reached the number — see A7.
+**Never the only readable copy of the result.** It was, here.
 
 > **Keep the `.sr-only` clip.** `position:absolute; width:1px; height:1px; clip:rect(0,0,0,0);
-> clip-path:inset(50%); white-space:nowrap`. Set an explicit `color` on it — a clipped region that
-> inherits a matching colour reads as a 1:1 contrast error to WAVE even though nothing renders.
+> clip-path:inset(50%); white-space:nowrap`. Set an explicit `color` — a clipped region inheriting a
+> matching colour reads as a 1:1 contrast error to WAVE even though nothing renders.
 
 ---
 
@@ -203,8 +186,8 @@ must be able to emit `lang` alongside it.
 
 `SC 2.1.1` · **Level A**
 
-Every custom control — anything that is not a native `<button>`, `<a>`, `<select>` or `<input>` —
-needs an explicit key handler. Assert the **state change**, not just that the handler fired.
+Every control that is not a native `<button>`, `<a>`, `<select>` or `<input>` needs an explicit key
+handler. Assert the **state change**, not just that the handler fired.
 
 ---
 
@@ -212,8 +195,7 @@ needs an explicit key handler. Assert the **state change**, not just that the ha
 
 `SC 4.1.2` · **Level A**
 
-A slider built from a `<div>` needs the full contract, and the value must be written from every
-path that can change it — keyboard, drag, and click-on-track:
+The value must be written from every path that can change it — keyboard, drag, click-on-track:
 
 ```html
 <div role="slider" tabindex="0"
@@ -222,7 +204,7 @@ path that can change it — keyboard, drag, and click-on-track:
      aria-valuenow="20" aria-valuetext="20 percent">
 ```
 
-**Derive the ARIA from state, never set it imperatively in one branch only.** In React:
+**Derive the ARIA from state, never imperatively in one branch only.** In React
 `aria-valuenow={value}`, so desync is impossible.
 
 > **A CDP caveat, not a defect:** `Accessibility.getPartialAXTree` reports `valuetext: ""` for
@@ -235,9 +217,8 @@ path that can change it — keyboard, drag, and click-on-track:
 
 `SC 2.4.3` · **Level A**
 
-Drive real `Tab` and assert `document.activeElement` at each stop. Responsive layouts are where this
-breaks: a control that moves visually at a breakpoint must move in the DOM too, not be repositioned
-with CSS `order`.
+Drive real `Tab` and assert `document.activeElement` at each stop. A control that moves visually at
+a breakpoint must move in the DOM too, not be repositioned with CSS `order`.
 
 ---
 
@@ -245,19 +226,16 @@ with CSS `order`.
 
 `SC 2.4.7` · **Level AA**
 
-`outline: 2px solid #C86C03` with **no `outline-offset`**. Apply it to **every** focusable thing
-including skip links and inline links — a control that falls back to the browser's default ring
-still passes, but it is a visible inconsistency and the first thing an auditor notices.
+`outline: 2px solid #C86C03`, **no `outline-offset`**, on **every** focusable thing including skip
+links and inline links; a browser-default ring passes but looks inconsistent. Exception: the skip
+link uses `outline-offset: -4px` so the ring sits inside its own chip.
 
-The one exception is the skip link, which uses `outline-offset: -4px` so the ring sits inside its
-own filled chip rather than bleeding onto the page behind it.
+`#C86C03` clears the 3:1 SC 1.4.11 threshold on all three surfaces this app puts a control on:
+**3.44:1** on the cream page, **4.22:1** on the navy result panel, **3.75:1** on the modal white. A
+single navy ring would have been invisible on the navy panel.
 
-`#C86C03` is chosen because it clears the 3:1 SC 1.4.11 threshold against **all three** surfaces
-this app puts a control on: **3.44:1** on the cream page, **4.22:1** on the navy result panel, and
-**3.75:1** on the modal white. A single navy ring would have been invisible on the navy panel.
-
-**Never remove an outline without replacing it.** If the real control is a visually hidden
-`<input>` behind a styled surrogate, style the ring on the surrogate:
+**Never remove an outline without replacing it.** Where the real control is a hidden `<input>`
+behind a styled surrogate, ring the surrogate:
 
 ```css
 .vw-switch input:focus-visible ~ .vw-switch-track { outline: 2px solid #C86C03; }
@@ -269,10 +247,9 @@ this app puts a control on: **3.44:1** on the cream page, **4.22:1** on the navy
 
 `SC 2.4.11` · **Level AA**
 
-Use `scroll-padding-top` / `scroll-padding-bottom` on the scroll container equal to the height of
-the fixed bars, or a `focusin` handler that scrolls the control clear. Verify by measuring the
-focused control's rect against the viewport **after the scroll settles** — a synchronous read right
-after `.focus()` catches a smooth scroll mid-flight and reports a false failure.
+Use `scroll-padding-top` / `scroll-padding-bottom` equal to the fixed bars' height, or a `focusin`
+handler that scrolls the control clear. Measure the focused rect **after the scroll settles** — a
+synchronous read after `.focus()` catches a smooth scroll mid-flight and reports a false failure.
 
 ---
 
@@ -280,14 +257,14 @@ after `.focus()` catches a smooth scroll mid-flight and reports a false failure.
 
 `SC 2.1.2` · **Level A**
 
-Tab must cycle through every stop and out the other side. Any disclosure or panel must be escapable.
+Tab must cycle through every stop and out the other side; disclosures and panels must be escapable.
 
-**A modal dialog is the permitted exception** — it may contain focus, but only if Escape always
-closes it and focus returns to the element that opened it. Containment must be enforced two ways,
-not one: a `keydown` handler that cycles Tab inside the dialog, **and** `inert` on the background
-regions. The handler alone is not enough, because it only fires while focus is already inside the
-dialog — a trip out to the browser chrome and back would land on a background control and escape the
-cycle. Remove `inert` *before* restoring focus on close, or the `.focus()` call is silently ignored.
+**A modal dialog is the permitted exception**, if Escape always closes it and focus returns to the
+opener. Enforce containment two ways — a `keydown` handler cycling Tab inside the dialog **and**
+`inert` on the background — because the handler only fires while focus is already inside, so a trip
+out to browser chrome and back lands on a background control. `inert` also removes the background
+from the **accessibility tree**, not just the focus order. Clear `inert` *before* restoring focus, or
+the `.focus()` call is silently ignored.
 
 ---
 
@@ -297,15 +274,14 @@ cycle. Remove `inert` *before* restoring focus on close, or the `.focus()` call 
 
 A region that scrolls must be focusable so a keyboard user can scroll it: `tabindex="0"`.
 
-**Add `role="group"` and a name only when the region is a landmark-like container in its own right.**
-Do **not** add them to a scrollable paragraph: `#nala-range-modal-body` carries `tabindex="0"` and
-nothing else, deliberately. A `role="group"` there would announce an extra grouping the user has to
-descend into — and in this app that grouping is precisely what caused a VoiceOver tester to conclude
-the result panel was unreadable (`a11y-2` §9.1 row 5). Keep it consistent with B8 item 4.
+**Add `role="group"` and a name only for a landmark-like container**, never a scrollable paragraph:
+`#nala-range-modal-body` carries `tabindex="0"` and nothing else, deliberately. A `role="group"`
+there announces an extra grouping to descend into — the grouping that made a VoiceOver tester
+conclude the result panel was unreadable (`a11y-2` §9.1 row 5). Consistent with B8 item 4.
 
-> **Two rules disagree here, by construction.** axe's experimental `focus-order-semantics` flags
-> `tabindex="0"` on a `role="group"` as a defect. It is tagged `best-practice` + `experimental`,
-> carries **no `wcag2*` tag**, and maps to no WCAG criterion. **Keep the `tabindex`** — 2.1.1 wins.
+> **Two rules disagree by construction.** axe's experimental `focus-order-semantics` flags
+> `tabindex="0"` on a `role="group"`. It is `best-practice` + `experimental`, carries **no `wcag2*`
+> tag**, and maps to no WCAG criterion. **Keep the `tabindex`** — 2.1.1 wins.
 
 ---
 
@@ -313,7 +289,7 @@ the result panel was unreadable (`a11y-2` §9.1 row 5). Keep it consistent with 
 
 `SC 4.1.2` · **Level A** · `SC 2.4.3` · **Level A**
 
-The range info modal is the reference implementation. Five things have to hold together:
+The range info modal is the reference implementation. Five things hold together:
 
 ```html
 <div id="overlay" hidden>
@@ -325,22 +301,20 @@ The range info modal is the reference implementation. Five things have to hold t
 </div>
 ```
 
-1. **`hidden` on the wrapper when closed**, so the dialog is absent from the accessibility tree
-   rather than merely invisible.
-2. **`aria-labelledby` → a real heading inside the dialog.** Do not hand-write a duplicate string.
-3. **The backdrop is a sibling, `aria-hidden="true"`** — never an ancestor of the dialog, and never
-   the same element as the overlay.
-4. **Initial focus goes to the body copy, not the close button.** A screen reader announces the
-   dialog's *name* on open but not its *content*; landing on the close button leaves the entire
-   explanation unread. Give the paragraph `tabindex="0"` and focus it. This also makes the copy
-   keyboard-scrollable when it overflows, which B7 requires anyway. **Do not also add
-   `aria-describedby` pointing at the same paragraph** — it would then be announced twice.
-5. **The trigger declares `aria-haspopup="dialog"`** and carries **no `aria-expanded`**.
-   `aria-expanded` belongs to the disclosure pattern; a button that opens a modal is not a
-   disclosure, and advertising a state you do not maintain is worse than advertising none.
+1. **`hidden` on the wrapper when closed**, so the dialog is absent from the tree, not merely
+   invisible.
+2. **`aria-labelledby` → a real heading inside the dialog**, not a hand-written duplicate.
+3. **The backdrop is a sibling, `aria-hidden="true"`** — never an ancestor of the dialog, never the
+   overlay itself.
+4. **Initial focus goes to the body copy, not the close button**: a reader announces the dialog's
+   *name* on open but not its *content*, so the close button leaves the explanation unread.
+   `tabindex="0"` on the paragraph also makes it keyboard-scrollable (B7). **Do not add
+   `aria-describedby` to that same paragraph** — it would be announced twice.
+5. **The trigger declares `aria-haspopup="dialog"` and no `aria-expanded`** — `aria-expanded`
+   belongs to the disclosure pattern, and advertising an unmaintained state is worse than none.
 
-Escape, the close button, and a backdrop click must all close it and all restore focus to the
-trigger. See B6 for why the focus trap needs `inert` as well as a Tab handler.
+Escape, the close button and a backdrop click must all close it and restore focus to the trigger.
+B6 covers the `inert` half of the trap.
 
 ---
 # 3. Pointer and targets
@@ -353,9 +327,9 @@ trigger. See B6 for why the focus trap needs `inert` as well as a Tab handler.
 > 4.13.0, so a stock run reports "0 violations" without testing target size at all. Turn it on:
 > `axe.run(el, { rules: { 'target-size': { enabled: true } } })`.
 
-A visually small control can still be a compliant target if a transparent `::before` enlarges the
-**hit area** — and that is a legitimate technique, not a loophole. WCAG defines a target as "the
-region of the display that will accept a pointer action":
+A visually small control still complies if a transparent `::before` enlarges the **hit area** —
+legitimate, since WCAG defines a target as "the region of the display that will accept a pointer
+action":
 
 ```css
 .thumb { width: 18px; height: 18px; }
@@ -366,19 +340,17 @@ region of the display that will accept a pointer action":
 }
 ```
 
-**Prove it, do not assume it.** Ray-cast `document.elementFromPoint` outward from the centre in
-0.5px steps and confirm the hit region really is ≥24×24 — and that a real drag *starts* from the
-enlarged area, not just a hit-test.
+**Prove it:** ray-cast `document.elementFromPoint` outward from the centre in 0.5px steps, and
+confirm a real drag *starts* from the enlarged area, not just a hit-test.
 
-**If a target genuinely is undersized**, the spacing exception is the fallback, and the test depends
+**If a target genuinely is undersized**, the spacing exception is the fallback and the test depends
 on the neighbour:
 
 - against a **full-size** neighbour: a 24px-diameter circle centred on the undersized target must
   not intersect the neighbour's **box** — i.e. **≥12px from centre to box edge**
 - against **another undersized** target: **≥24px centre-to-centre**
 
-Using centre-to-centre against a full-size neighbour is the wrong test and gives a falsely
-comfortable number.
+Centre-to-centre against a full-size neighbour is the wrong test and reads falsely comfortable.
 
 ---
 
@@ -395,8 +367,8 @@ Native `<button>` gets this free. A custom control must fire on `pointerup`/`cli
 
 `SC 2.5.7` · **Level AA**
 
-A slider thumb that can be dragged must also respond to arrow keys, and ideally to a click on the
-track. Arrow keys alone satisfy the criterion.
+A draggable slider thumb must also respond to arrow keys, and ideally to a click on the track.
+Arrow keys alone satisfy the criterion.
 
 ---
 # 4. Visual
@@ -405,17 +377,15 @@ track. Arrow keys alone satisfy the criterion.
 
 `SC 1.4.3` · **Level AA**
 
-Over a gradient, an image, or an overlapping element, axe returns **`incomplete`**, not a pass.
-Those must be resolved by hand, on real pixels.
-
-**How to measure without producing a false result:**
+Over a gradient, an image or an overlapping element, axe returns **`incomplete`**, not a pass.
+Resolve those by hand, on real pixels:
 
 - `Page.captureScreenshot` `clip` is **document-absolute**; `getBoundingClientRect()` is
-  **viewport-relative**. Screenshot the viewport and crop in PIL with viewport-relative coordinates.
-  A ratio of exactly `1.00:1` with one unique colour means your crop missed.
-- Crop to the **glyph band** — the union of `Range.getClientRects()` over the text nodes — so the
-  element's own border is excluded. A 1px border can occupy enough of a padding-box crop to be
-  picked as "the background" and produce a false failure.
+  **viewport-relative**. Screenshot the viewport and crop viewport-relative. Exactly `1.00:1` with
+  one unique colour means the crop missed.
+- Crop to the **glyph band** — the union of `Range.getClientRects()` over the text nodes — excluding
+  the element's own border. A 1px border can occupy enough of a padding-box crop to be picked as
+  "the background", producing a false failure.
 - Take the **dominant** background, not the worst minority colour. At 12px the glyph core is under
   1% of the crop, so the most *frequent* off-background pixel is an anti-aliasing mid-tone.
 
@@ -436,10 +406,10 @@ Control boundaries, focus rings and selected-state indicators.
 **400% zoom is `setDeviceMetricsOverride{ width:320, height:256, deviceScaleFactor:4 }`.**
 `dsf 1` is a small screen — a different test.
 
-Content may scroll in **one** direction only. A horizontal carousel inside a bounded, keyboard-
-operable region is the permitted two-dimensional exception; page-level horizontal scroll is not.
-
-Sufficient techniques: **C31** (flexbox), **C32** (media queries + grid), **C34** (un-fix sticky).
+Content may scroll in **one** direction only. A horizontal carousel inside a bounded,
+keyboard-operable region is the permitted two-dimensional exception; page-level horizontal scroll is
+not. Sufficient techniques: **C31** (flexbox), **C32** (media queries + grid), **C34** (un-fix
+sticky).
 
 ---
 
@@ -470,33 +440,29 @@ No `@media (orientation:)` rule that hides or restricts content.
 # 5. React, styled-components and AEM — the ones that bite
 
 1. **`styled-components` drops unknown props.** `aria-*` and `role` pass through on DOM elements but
-   **not** through a custom component unless you forward them. Spread `{...rest}` onto the DOM node.
-2. **AEM `EditableComponent` injects a wrapper `<div>`.** Anything relying on a parent-child ARIA
-   relationship (a `radiogroup` owning its radios, `aria-labelledby` across a boundary) breaks when
-   each child becomes separately authorable. Keep such a group as **one** component, or wire
-   `aria-owns` explicitly.
-3. **Conditional rendering destroys focus.** Unmounting a panel while focus is inside drops focus to
+   **not** through a custom component unless forwarded. Spread `{...rest}` onto the DOM node.
+2. **AEM `EditableComponent` injects a wrapper `<div>`**, breaking any parent-child ARIA
+   relationship (a `radiogroup` owning its radios, `aria-labelledby` across a boundary) once each
+   child is separately authorable. Keep such a group as **one** component, or wire `aria-owns`.
+3. **Conditional rendering destroys focus.** Unmounting a panel while focus is inside drops it to
    `<body>`. Return focus to the opener explicitly.
 4. **`useId()` for every label association** — hand-written ids collide once a component is placed
    twice on a page, and `duplicate-id-aria` is a real failure.
-5. **A CSS-in-JS `:focus-visible` must survive minification.** Verify the ring in the built bundle,
-   not just in dev.
+5. **A CSS-in-JS `:focus-visible` must survive minification.** Verify the ring in the built bundle.
 6. **Icons: name or hide at the component boundary** (A1). A per-call-site decision will be missed.
-7. **Live regions must mount before they are written to.** Render the region unconditionally; write
-   into it on update.
+7. **Live regions must mount before they are written to.** Render unconditionally; write on update.
 
 ---
 
 # 6. Definition of Done
 
-- [ ] **axe with `target-size` explicitly enabled** — it is off by default, so without that line CI
-      passes SC 2.5.8 without ever testing it
+- [ ] **axe with `target-size` explicitly enabled** — off by default, so without that line CI passes
+      SC 2.5.8 without testing it
 - [ ] **Accessibility tree asserted** — `0` unnamed `role=image` nodes, `0` unnamed interactive
       nodes, every duplicate role+name pair reviewed
 - [ ] **Real keyboard run** — Tab / Shift+Tab / Enter / Space / Arrows / Escape, asserting
       `document.activeElement` and the resulting state at each step
-- [ ] **All states, not just the default** — open every dialog, select every
-      option, and re-run the checks after each
+- [ ] **All states, not just the default** — open every dialog, select every option, re-run after each
 - [ ] **Reflow at 320×256 @ dsf 4** — nothing lost, no page-level horizontal scroll
 - [ ] **Contrast on composited pixels** wherever text sits over a gradient or imagery
 - [ ] **SC 2.5.3 by hand** — visible label contained in the accessible name. No tool does this
@@ -508,66 +474,57 @@ No `@media (orientation:)` rule that hides or restricts content.
 
 # 7. App-specific notes
 
-**The sentence UI is the hard part.** The controls are `<select>`s embedded in a running sentence —
-"What is the range **of my [ID.7]** when I mostly drive **[motorway]** in **[cold]** weather and I am
-driving **[alone]**". That makes A4 (SC 2.5.3) unusually delicate: each control's accessible name is
-assembled from the sentence fragments around it.
-
-**The rule that works: append, never splice.**
+**The sentence UI is the hard part.** The `<select>`s sit inside a running sentence — "What is the
+range **of my [ID.7]** when I mostly drive **[motorway]** in **[cold]** weather and I am driving
+**[alone]**" — so prose surrounds every control and could be mistaken for its label. **Append, never
+splice.**
 
 ```html
-<!-- ✓ A concise, STABLE aria-label. Not stitched together from the visible
-     sentence: that made the name move with the value, because JS rewrites the
-     ID.7 token. A name must not change when the value changes. -->
-<span id="select-w1">of my</span>                      <!-- prose, not a label -->
+<!-- ✓ concise, STABLE aria-label — not stitched from the visible sentence:
+     JS rewrites the ID.7 token, so a stitched name moves with the value. -->
+<span id="select-w1">of my</span>                          <!-- prose, not a label -->
 <span id="select-veh-family" class="fl-label">ID.7</span>  <!-- the VALUE's family -->
 <select id="select-veh" aria-label="my car model variant">…</select>
 
-<!-- ✗ do NOT stitch a name out of the visible sentence spans:
-     aria-labelledby="select-w1 select-veh-family select-veh-hint"   <-- ids since deleted
-     yields "of my ID.7 variant", and JS rewrites the ID.7 token — so the
-     NAME MOVES WITH THE VALUE. Names must be stable. -->
+<!-- ✗ aria-labelledby="select-w1 select-veh-family select-veh-hint" (ids since
+     deleted) yields "of my ID.7 variant" — the NAME MOVES WITH THE VALUE. -->
 ```
 
-The four names are *my car model variant*, *driving location*, *weather condition* and *travelling* — concise, stable, and describing purpose rather than echoing the prose. That is
-a **recorded 2.5.3 decision**, not a free win: see `a11y-1-criteria.md`. It rests on reading the
-sentence words as context and the on-control text as the value, so that no select has a visible
-*label*. An auditor may disagree.
+The four names are *my car model variant*, *driving location*, *weather condition* and *travelling*:
+purpose, not prose. A **recorded 2.5.3 decision** (`a11y-1-criteria.md`), not a free win.
 
-**A responsive name is a trap worth knowing even though it is now gone.** This app previously ran a
-`syncEnvLabel()` that rewrote the environment select's `aria-label` when the visible copy changed at
-the 400px breakpoint — because *if a name is derived from visible text and that text is responsive,
-the name must be responsive too, or 2.5.3 breaks at one width only.* The concise-label scheme
-removes the whole class of bug: a name that never derives from visible copy cannot drift from it.
-**If you reintroduce visible-text-derived names, verify 2.5.3 at every breakpoint, not just the
-widest.**
+**Responsive names are a trap, though this one is gone.** A former `syncEnvLabel()` rewrote the
+environment select's `aria-label` when the visible copy changed at the 400px breakpoint: a name
+derived from responsive visible text must itself be responsive, or 2.5.3 breaks at one width only.
+Reintroduce visible-text-derived names and 2.5.3 needs verifying at every breakpoint.
 
-**`button#nala-info-btn` measures 23.797 × 24**, not 24×24 — `offsetWidth` rounds up to 24 and
+**`button#nala-info-btn` measures 23.797 × 24**, not 24×24 — the CSS declares `23.803px` and Blink's
+LayoutUnit snapping renders it as 23.797, so **both numbers are correct and neither is a typo.**
+`offsetWidth` rounds up to 24 and
 `getBoundingClientRect()` does not. It passes SC 2.5.8 comfortably because `::before` makes the real
-target ~36.0 × 36.0 (C1), and the nearest other target is 86.8px away. But **a manual DevTools check of the
-border box will read 23.8 and flag it**, so the `::before` is load-bearing for the explanation even
-though it is not load-bearing for the pass. Do not remove it.
+target ~36.0 × 36.0 (C1) and the nearest other target is 86.8px away. A manual DevTools check of the
+border box reads 23.8 and flags it, so the `::before` is load-bearing for the explanation though not
+for the pass. Do not remove it.
 
-**Superseded — kept only so the reasoning is not repeated.** `select#select-occ` used to be named
-"weather and I am driving", inherited wholesale from the visible span. It
-opens with a word belonging to the *previous* control. Correct per 2.5.3, mildly confusing to hear.
-Worth revisiting if the sentence is ever restructured.
+**Superseded, recorded so it is not re-derived.** `select#select-occ` was once named "weather and I
+am driving", inherited from the visible span, so it opened with a word belonging to the *previous*
+control — correct per 2.5.3, confusing to hear.
 
 ---
 
 # 8. What is still open
 
-Four items a port inherits. None is a blocker; all are things to decide deliberately rather than
-discover.
+Four items a port inherits. None is a blocker; all are to be decided deliberately rather than
+discovered.
 
 | Item | State | What to do |
 |---|---|---|
-| **Select border contrast** | **SC 1.4.11 fails.** `rgb(161,164,172)` on the cream page is **2.29:1**; the criterion needs 3:1. | **Upstream.** This is a core component value, not a prototype choice — do not darken it locally. Raise it with whoever owns the design system. `#8b8e96` is the nearest passing shade at 3.01:1 if they ask. |
-| **One car render, three variants** | `assets/` ships a single image. `alt` describes only what is shown, so it stays accurate — but it cannot describe the selected variant. | Add one render per variant and assign `src` and `alt` **together**. Never update `alt` alone: that makes the text alternative describe an image nobody is looking at (SC 1.1.1). |
-| **Dialog heading not announced** | Focus lands on the dialog's body copy, so a reader speaks the paragraph but not the `h2`. | **Leave it.** Focus placement cannot satisfy both — focusing the container announces the heading and skips the paragraph, which is the exact defect the sibling Visualizer shipped. Content wins. `aria-describedby` is the canonical alternative and was rejected: the paragraph is 945 characters and long descriptions get truncated by some readers. If revisited, A/B it **by ear**. |
-| **SC 2.5.3 on all four select names** | Passes on the reading that the sentence prose is *context* and the on-control text is the *value*, so no select has a visible **label**. | Recorded, not hidden. An auditor who reads a talking-sentence UI's prose as the label would fail all four. The only clean close is a **design** change — a visible label per control. Nothing fails without it. |
+| **Select border contrast** | **SC 1.4.11 fails.** `rgb(161,164,172)` on the cream page is **2.29:1**; needs 3:1. | **Upstream** — a core component value, not a prototype choice, so never darken it locally. `#8b8e96` is the nearest passing shade at 3.01:1. |
+| **One car render, three variants** | `assets/` ships one image; `alt` describes only what is shown, so it stays accurate but cannot describe the selected variant. | Add one render per variant, assigning `src` and `alt` **together**. Never `alt` alone — the alternative would describe an image nobody is looking at (SC 1.1.1). |
+| **Dialog heading not announced** | Focus lands on the body copy, so a reader speaks the paragraph but not the `h2`. | **Leave it.** Focusing the container announces the heading and skips the paragraph — the defect the sibling Visualizer shipped. `aria-describedby` was rejected: the paragraph is 945 characters and long descriptions get truncated by some readers. If revisited, A/B by ear. |
+| **SC 2.5.3 on all four select names** | Passes on the reading that the prose is *context* and the on-control text is the *value*, so no select has a visible **label**. | A recorded decision, not a pass by default. An auditor reading the prose as the label would fail all four; the only clean close is a **design** change, a visible label per control. |
 
 **Not open, and not to be reopened:** the concise `aria-label` naming scheme (A3), the empty-at-rest
-live region (A6), `inert` on the background while the dialog is open (B6), and the `::before` hit-area
-expansion on the info button (C1). Each replaced something that measurably failed; the reasoning is
-recorded next to each rule so it is not undone by someone tidying up.
+live region (A6), `inert` on the background while the dialog is open (B6), and the `::before`
+hit-area expansion on the info button (C1). Each replaced something that measurably failed; the
+reasoning sits next to each rule so it is not undone by someone tidying up.

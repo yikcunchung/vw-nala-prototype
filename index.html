@@ -247,7 +247,7 @@ body {
 
 /* Hover — exact Figma values, as in the simulators */
 .fl-select:hover select { border-color: rgba(153,127,103,1); color: rgba(115,62,1,1); }
-.fl-select:hover .fl-label { color: rgba(115,62,1,1); max-width:100%; white-space:normal; overflow-wrap:break-word; text-overflow:clip;}
+.fl-select:hover .fl-label { color: rgba(115,62,1,1); }
 .fl-select:hover .fl-chevron svg path { fill: rgba(115,62,1,1); }
 
 .fl-label {
@@ -255,10 +255,9 @@ body {
   font-family: var(--font-text); font-size: 12px; line-height: 18px;
   font-weight: 400; color: var(--label-blue);
   pointer-events: none;
-  overflow: hidden;  
-  
+  overflow: hidden;
   transition: color 0.15s;
-  z-index: 1; max-width:100%; white-space:normal; overflow-wrap:break-word; text-overflow:clip;}
+  z-index: 1; right:52px; white-space:nowrap; text-overflow:ellipsis;}
 
 .fl-chevron {
   position: absolute; right: 16px; top: 50%;

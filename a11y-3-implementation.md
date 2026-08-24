@@ -7,22 +7,45 @@ styled-components.
 
 **Scope:** the whole page. This app is standalone — there is no component-versus-page split.
 
-> **Do not copy the reference build.** It is vanilla HTML/JS and it is a *behavioural
-> specification*, not source to port. A meaningful share of the required behaviour lives in
-> JavaScript — a port that copies the DOM and rewrites the logic will silently drop it.
+**BLUF:** Build nala so that keyboard and screen-reader users can reach the *result*, not just the
+controls. That is where this app actually failed. **Roughly half the required behaviour lives in
+JavaScript**, so treat the vanilla reference as a *behavioural specification* and never as DOM to
+copy — a port that lifts the markup and rewrites the logic will silently drop it.
+
+**How to read this.** §1–§6 are **prescriptive**: the contract the port must meet, not a description
+of the current build. §7 is **descriptive** — what the reference build measurably does today, for
+diffing against. Where the two disagree, §1–§6 win.
 
 ---
 
-## Start here — the defect that shipped, and that no tool caught
+## Start here — the two defects that shipped, and that no tool caught
 
-This app is the **exception** in the suite: it shipped with **0 unnamed graphics**. Every inline
-`<svg>` already carried `aria-hidden="true"` or a name, and the car render had a real descriptive
-`alt`. The other three simulators did not — range-simulator exposed **16** unnamed graphics,
-cost-simulator 9, charging-time 7, and **axe, WAVE and Nu all reported clean** on every one of them.
+Both were found by driving the build, not by scanning it. **axe at 96 rules, WAVE and Nu passed both.**
 
-Treat that as the lesson rather than a clean bill: the pattern is one attribute, it is easy to miss
-on a new icon, and no scanner in the required toolchain will tell you. **A1 is the rule that keeps
-it fixed; the accessibility-tree assertion in the Definition of Done is the check that proves it.**
+| Rule | What went wrong | Cost if missed |
+|---|---|---|
+| **A6** | The visible result carried `aria-hidden="true"` — because it animates and must not be counted aloud — leaving a **1×1 clipped `aria-live` region as the only readable copy**. A live region's job is to interrupt on change, not to be browsed. | **The app's entire output was unreachable.** A screen-reader user could operate every control and never learn the answer. Found by ear; invisible to every tool in the required toolchain. |
+| **B8** | The "Learn more" CTA was a `<button>` with no handler: focusable, announced as a button, and doing nothing on activation. | An interaction dead end. Worse than the control not existing, because it advertises an affordance it does not have. |
+
+Two more that cost real time and are worth knowing before you start:
+
+- **A `role="group"` you did not need.** The result panel's implicit grouping meant `VO+Right` at the
+  outer level announced only the two focusable children and skipped the label and the number. A
+  tester reasonably concluded the panel was unreadable. It was not — it needed `VO+Shift+Down`. **Do
+  not add grouping to a readout**, and see B7.
+- **VoiceOver + Chrome is not the pairing to test in.** Static text present and unignored in
+  *Chrome's own* accessibility tree went unannounced there and read fine in Safari. Test VoiceOver in
+  **Safari**; use Chrome only as a second opinion, and record disagreements rather than treating
+  either as ground truth.
+
+**The habit that would have caught all of it:** a name being present, unique and correct in the
+accessibility tree does not mean a user is ever told it. Check the *output*, not just the tree —
+and check it in the reader/browser pairing the protocol names.
+
+**This app also shipped with 0 unnamed graphics**, which is worth stating because it is the one place
+nala beat its siblings: range-simulator exposed **16**, cost-simulator 9, charging-time 7, and axe,
+WAVE and Nu reported clean on every one. A1 is the rule that keeps that fixed; the accessibility-tree
+assertion in the Definition of Done is the check that proves it.
 
 ---
 # 1. Semantics and naming
@@ -529,3 +552,22 @@ though it is not load-bearing for the pass. Do not remove it.
 "weather and I am driving", inherited wholesale from the visible span. It
 opens with a word belonging to the *previous* control. Correct per 2.5.3, mildly confusing to hear.
 Worth revisiting if the sentence is ever restructured.
+
+---
+
+# 8. What is still open
+
+Four items a port inherits. None is a blocker; all are things to decide deliberately rather than
+discover.
+
+| Item | State | What to do |
+|---|---|---|
+| **Select border contrast** | **SC 1.4.11 fails.** `rgb(161,164,172)` on the cream page is **2.29:1**; the criterion needs 3:1. | **Upstream.** This is a core component value, not a prototype choice — do not darken it locally. Raise it with whoever owns the design system. `#8b8e96` is the nearest passing shade at 3.01:1 if they ask. |
+| **One car render, three variants** | `assets/` ships a single image. `alt` describes only what is shown, so it stays accurate — but it cannot describe the selected variant. | Add one render per variant and assign `src` and `alt` **together**. Never update `alt` alone: that makes the text alternative describe an image nobody is looking at (SC 1.1.1). |
+| **Dialog heading not announced** | Focus lands on the dialog's body copy, so a reader speaks the paragraph but not the `h2`. | **Leave it.** Focus placement cannot satisfy both — focusing the container announces the heading and skips the paragraph, which is the exact defect the sibling Visualizer shipped. Content wins. `aria-describedby` is the canonical alternative and was rejected: the paragraph is 945 characters and long descriptions get truncated by some readers. If revisited, A/B it **by ear**. |
+| **SC 2.5.3 on all four select names** | Passes on the reading that the sentence prose is *context* and the on-control text is the *value*, so no select has a visible **label**. | Recorded, not hidden. An auditor who reads a talking-sentence UI's prose as the label would fail all four. The only clean close is a **design** change — a visible label per control. Nothing fails without it. |
+
+**Not open, and not to be reopened:** the concise `aria-label` naming scheme (A3), the empty-at-rest
+live region (A6), `inert` on the background while the dialog is open (B6), and the `::before` hit-area
+expansion on the info button (C1). Each replaced something that measurably failed; the reasoning is
+recorded next to each rule so it is not undone by someone tidying up.

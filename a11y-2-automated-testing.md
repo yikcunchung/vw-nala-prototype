@@ -1,4 +1,4 @@
-# A11y 2 of 3 — What the automated tests cover, and what they cannot
+# A11y 2 of 3 — What the tools prove, and what they cannot
 
 **App:** VW NaLa (`nala`).
 **Audited:** 2026-08-24 against the live deployment, headless Chrome 151.0.7922.174, axe-core 4.13.0
@@ -6,13 +6,25 @@
 **Deployed at:** https://yikcunchung.github.io/vw-nala-prototype/
 **Companions:** `a11y-1-criteria.md` (every criterion) · `a11y-3-implementation.md` (what to build).
 
-The single most important sentence in this pack:
+**BLUF:** nala is at **0 axe violations** across five viewports × two states with all nine
+default-disabled rules force-enabled (96 rules), **0 WAVE errors** hosted *and* by extension in both
+states, **0 issues** through the axe DevTools UI at WCAG 2.2 AA, and **0 unnamed nodes** in the
+accessibility tree. The behaviour no scanner reaches was driven with real key events. **A VoiceOver
+pass is complete — 15 of 15 rows — and it found a defect every one of those tools passed.** Two
+things are still owed: **NVDA**, and an **upstream fix to the select border**, which fails SC 1.4.11
+at 2.29:1 and is a core-component value this app does not own.
 
-> **A clean automated run is necessary and nowhere near sufficient.** This app scores 0 axe
-> violations, 0 WAVE errors and 0 HTML validity errors — and that result could not see the
-> **`aria-hidden` on the result value that a VoiceOver pass found** (§9.1 row 6), cannot test SC 2.5.3, cannot judge
-> whether a name is *correct* rather than merely present, and cannot tell you what a screen reader
-> actually says.
+> **The one sentence that matters:** a clean automated run is necessary and nowhere near sufficient.
+> This app scored 0 axe violations at 96 rules, 0 WAVE errors and 0 HTML validity errors **while the
+> visible result carried `aria-hidden="true"`** — the headline number absent from the accessibility
+> tree, with only a clipped live region as the readable copy, so browsing the result panel never
+> reached the result (§9.1 row 6). Tooling also cannot test SC 2.5.3, cannot judge whether a name is
+> *correct* rather than merely present, and cannot tell you what a screen reader actually says.
+
+**How to read this.** §0–§5 are **explanation** — what the tools can and cannot establish, and the
+traps that make a zero untrustworthy. §6–§8 are **procedure** — follow them to reproduce or re-run.
+§9 is the **evidence record**: what was actually observed, when, on which build. §10 is the **claim**
+the evidence supports, and the three reasons it stops short of "fully compliant".
 
 ---
 

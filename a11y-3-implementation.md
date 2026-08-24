@@ -70,12 +70,25 @@ that is focusable.
 
 ---
 
-### A3 — A `<select>` is named by its visible label
+### A3 — A `<select>` carries a concise, STABLE `aria-label`
 
 `SC 1.3.1, 4.1.2` · **Level A**
 
-Use `aria-labelledby` pointing at the visible label element. Do not retype the label into an
-`aria-label` — that is how the visible text and the name drift apart (see A4).
+```html
+<select id="select-veh" aria-label="my car model variant">…</select>
+```
+
+**Do not stitch the name out of the surrounding sentence with `aria-labelledby`.** This app shipped
+that scheme and it failed: one of the referenced spans is rewritten by JS on every change, so the
+**accessible name moved with the value**. A name must be stable. See §7.
+
+That makes this app the exception to the usual advice, and the reason is worth understanding rather
+than generalising: in a talking-sentence UI the words around a control are **running prose**, and the
+text on the control is its **value**. Neither is a label. Where a control *does* have a real visible
+label, prefer `aria-labelledby` pointing at it — that guidance still holds elsewhere.
+
+The cost is a recorded **SC 2.5.3** decision: the names deliberately do not echo the visible prose.
+An auditor who reads that prose as the label would fail all four. Documented in `a11y-1`, not hidden.
 
 **Trap:** a `<select>`'s `<option>` text is **not** its label. An audit that compares concatenated
 option text against the accessible name will manufacture failures that do not exist.
@@ -116,11 +129,36 @@ skip link as the **first** tab stop, pointing at an id that exists.
 `SC 4.1.3` · **Level AA**
 
 ```html
-<p id="nala-live" class="sr-only" aria-live="polite"></p>
+<p id="nala-live" class="sr-only" aria-live="polite" aria-atomic="true"></p>
 ```
 
 The region must already be in the DOM at load — injecting it and writing to it in the same tick is
 not announced. Write to it from **every** path that changes the result, not just the common one.
+
+**Empty at rest, populated only transiently.** This is not a style preference; it is what the
+VoiceOver run forced:
+
+```js
+var liveTimer = null, firstPaint = true;
+function announce(km) {
+  if (firstPaint) { return; }          // load is not a change
+  clearTimeout(liveTimer);
+  liveEl.textContent = 'Estimated range ' + km + ' kilometres.';
+  liveTimer = setTimeout(function () { liveEl.textContent = ''; }, 3000);
+}
+```
+
+Three things that each matter:
+
+- **`firstPaint`** — a region already populated at first paint is read as part of the page rather
+  than as an update.
+- **Cleared after use** — a permanently populated region is announced *again* when the user browses
+  the panel, so the value is heard twice.
+- **3000ms, not less** — a region refilled too quickly is dropped outright by some readers, losing
+  the announcement altogether. That is worse than repeating.
+
+**The live region must never be the only readable copy of the result.** It was, here, and browsing
+the panel never reached the number — see A7.
 
 > **Keep the `.sr-only` clip.** `position:absolute; width:1px; height:1px; clip:rect(0,0,0,0);
 > clip-path:inset(50%); white-space:nowrap`. Set an explicit `color` on it — a clipped region that
@@ -234,8 +272,13 @@ cycle. Remove `inert` *before* restoring focus on close, or the `.focus()` call 
 
 `SC 2.1.1` · **Level A** (ACT rule `0ssw9k`)
 
-A region that scrolls must be focusable so a keyboard user can scroll it: `tabindex="0"` plus
-`role="group"` and an accessible name.
+A region that scrolls must be focusable so a keyboard user can scroll it: `tabindex="0"`.
+
+**Add `role="group"` and a name only when the region is a landmark-like container in its own right.**
+Do **not** add them to a scrollable paragraph: `#nala-range-modal-body` carries `tabindex="0"` and
+nothing else, deliberately. A `role="group"` there would announce an extra grouping the user has to
+descend into — and in this app that grouping is precisely what caused a VoiceOver tester to conclude
+the result panel was unreadable (`a11y-2` §9.1 row 5). Keep it consistent with B8 item 4.
 
 > **Two rules disagree here, by construction.** axe's experimental `focus-order-semantics` flags
 > `tabindex="0"` on a `role="group"` as a defect. It is tagged `best-practice` + `experimental`,
@@ -458,13 +501,12 @@ assembled from the sentence fragments around it.
 <select id="select-veh" aria-label="my car model variant">…</select>
 
 <!-- ✗ do NOT stitch a name out of the visible sentence spans:
-     aria-labelledby="select-w1 select-veh-family select-veh-hint"
+     aria-labelledby="select-w1 select-veh-family select-veh-hint"   <-- ids since deleted
      yields "of my ID.7 variant", and JS rewrites the ID.7 token — so the
      NAME MOVES WITH THE VALUE. Names must be stable. -->
 ```
 
-The four names are *my car model variant*, *driving location*, *weather condition* and *number of
-people in the car* — concise, stable, and describing purpose rather than echoing the prose. That is
+The four names are *my car model variant*, *driving location*, *weather condition* and *travelling* — concise, stable, and describing purpose rather than echoing the prose. That is
 a **recorded 2.5.3 decision**, not a free win: see `a11y-1-criteria.md`. It rests on reading the
 sentence words as context and the on-control text as the value, so that no select has a visible
 *label*. An auditor may disagree.
@@ -479,7 +521,7 @@ widest.**
 
 **`button#nala-info-btn` measures 23.797 × 24**, not 24×24 — `offsetWidth` rounds up to 24 and
 `getBoundingClientRect()` does not. It passes SC 2.5.8 comfortably because `::before` makes the real
-target ~36.7 × 36.8 (C1), and it has 66px of clearance besides. But **a manual DevTools check of the
+target ~36.0 × 36.0 (C1), and the nearest other target is 86.8px away. But **a manual DevTools check of the
 border box will read 23.8 and flag it**, so the `::before` is load-bearing for the explanation even
 though it is not load-bearing for the pass. Do not remove it.
 

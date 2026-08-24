@@ -1,7 +1,7 @@
 # A11y 2 of 3 — What the automated tests cover, and what they cannot
 
 **App:** VW NaLa (`nala`).
-**Audited:** 2026-08-22 against the live deployment, headless Chrome 151.0.7922.174, axe-core 4.13.0
+**Audited:** 2026-08-24 against the live deployment, headless Chrome 151.0.7922.174, axe-core 4.13.0
 (`axe.version` read from the engine, not the bundle filename).
 **Deployed at:** https://yikcunchung.github.io/vw-nala-prototype/
 **Companions:** `a11y-1-criteria.md` (every criterion) · `a11y-3-implementation.md` (what to build).
@@ -10,7 +10,7 @@ The single most important sentence in this pack:
 
 > **A clean automated run is necessary and nowhere near sufficient.** This app scores 0 axe
 > violations, 0 WAVE errors and 0 HTML validity errors — and that result could not see the
-> unnamed-graphic defect that the accessibility tree found, cannot test SC 2.5.3, cannot judge
+> **`aria-hidden` on the result value that a VoiceOver pass found** (§9.1 row 6), cannot test SC 2.5.3, cannot judge
 > whether a name is *correct* rather than merely present, and cannot tell you what a screen reader
 > actually says.
 
@@ -30,7 +30,7 @@ The local `index.html` and the deployed build are **byte-identical**.
 | Tool | Good for | Blind spots that matter here |
 |---|---|---|
 | **axe-core 4.13.0** | Structural ARIA, names, roles, contrast on solid backgrounds | **No `label-in-name` rule at all** (SC 2.5.3). **Cannot see an unnamed inline `<svg>` that has no `role`** — trap 10. Cannot see behaviour. Punts on contrast over gradients. **Nine rules are off by default, including `target-size`** — trap 1 |
-| **WAVE 3.3.1.0** | A genuinely different engine; catches empty labels and sr-only contrast axe passes | Needs a public URL. Reports `.sr-only` contrast as an error even when clipped to 1×1 |
+| **WAVE 3.3.1.0** | A genuinely different engine; catches empty labels and sr-only contrast axe passes | Needs a public URL. *May* report `.sr-only` contrast as an error even when clipped to 1×1 — it did **not** here (§9.2), because `#nala-live` sets an explicit colour |
 | **Nu HTML validator** | SC 4.1.1 Parsing, still normative under EN 301 549 | Says nothing about semantics or naming |
 | **Accessibility tree (CDP)** | Ground truth for name / role / value | Exposure is not announcement — §5 |
 | **Real key and pointer events** | The only way to test behaviour | Slow; assert state after every event |
@@ -48,9 +48,10 @@ The local `index.html` and the deployed build are **byte-identical**.
 
 ### NVDA vs VoiceOver — a deviation to record
 
-VoiceOver is planned instead of NVDA. Record that as a **deviation**, not a substitution. The two
-disagree exactly where this app is interesting: a `<select>` named via `aria-labelledby`, live-region
-politeness, and controls built from a visually hidden `<input>` behind a styled `<label>`. NVDA is
+**VoiceOver has been run (§9.1); NVDA has not.** Record that as a **deviation**, not a substitution.
+The two disagree exactly where this app is interesting: a `<select>` named by a concise `aria-label`
+that deliberately does not echo the visible prose, live-region politeness and timing, and whether a
+clipped `.sr-only` node is announced at all. NVDA is
 normally tested with Firefox or Chrome, VoiceOver with Safari, so the browser differs too. Budget an
 NVDA pass before formal sign-off.
 
@@ -89,11 +90,11 @@ Measured at 1440×900 via `Accessibility.getFullAXTree` (unignored nodes only).
 | Duplicate role+name | 0 | 0 |
 | Real Tab stops | 7, then out of the document | **2** |
 
-**The modal-open figure is the interesting one: 80 nodes → 20.** `inert` on `#topbar` and
+**The modal-open figure is the interesting one: 81 nodes → 20.** `inert` on `#topbar` and
 `#nala-main` does not merely block focus — it removes the background from the **accessibility tree
 altogether**. Before `inert` was applied the same measurement read 103 nodes, i.e. the whole page
 was still exposed behind an `aria-modal="true"` dialog. This is what makes the containment real
-rather than advisory, and it is why the virtual-cursor check in §7 is expected to pass: there is
+rather than advisory, and it is why the virtual-cursor check passed by ear (§9.1 row 11): there is
 nothing behind the dialog left to navigate to.
 
 > **Do not count focusable elements with a DOM query when `inert` is in play.**
@@ -239,8 +240,9 @@ domain, or append a cache-busting query string.
 **10 · axe is blind to unnamed inline SVGs.** `svg-img-alt` and `role-img-alt` return
 **`inapplicable`** for an `<svg>` with no `role`, and `image-alt` only inspects `<img>`. A page can
 expose any number of unnamed graphics and still score 0 violations. **Read `role=image` nodes off
-the AX tree and assert 0 unnamed** — that is how every unnamed-graphic failure in this suite was
-found, and neither axe nor WAVE nor Nu saw any of them.
+the AX tree and assert 0 unnamed** — that is how every unnamed-graphic failure in this *suite* was
+found, and neither axe nor WAVE nor Nu saw any of them. **This app has never had one** (§2): the trap
+is listed because the check is what proves that, not because nala failed it.
 
 ---
 
@@ -262,8 +264,8 @@ labelled "button". Names must be read against what they describe.
 
 # 6. Manual testing — what to do
 
-Three runs remain, in this order: **VoiceOver**, **WAVE extension**, **axe DevTools UI**. NVDA is a
-fourth and is the one real gap (§1).
+**All three of these have now been run — results in §9.** This section is kept as the
+reproducible procedure, not a to-do list. **NVDA remains outstanding** — §1.
 
 **Actions only, in the order you perform them. Do not judge anything as you go** — write down what
 happened and grade it against **§7** afterwards. Judging in the moment is how "it seemed fine"
@@ -293,7 +295,7 @@ Do Step 0, then — **writing down the spoken words after each action:**
 1. `VO+Right` from the top until you have passed the whole sentence. Note what is said at each of
    the four dropdowns.
 2. `Tab` to each dropdown in turn. Note the name **and** the value spoken.
-3. On `#select-wea`, note the exact utterance — this is the SC 2.5.3 evidence.
+3. Note each utterance against the visible sentence — this is the SC 2.5.3 evidence. The old `#select-wea` word-splice no longer exists; 2.5.3 now applies equally to all four names.
 4. Continue `VO+Right` into the dark result panel. **Note every string spoken, in order**, from the
    words "Estimated range" through to the consumption line.
 5. Change any dropdown (`VO+Space`, arrow, `Return`). Note what is announced, and how many times.
@@ -384,15 +386,14 @@ Tick only what you observed. **An untested box is not a pass.**
       ```
       "Estimated range"                   ← visible label
       "More information …, button"        ← the ⓘ
-      "Estimated range 600 kilometres."   ← the sr-only live region
+      "600 km"                            ← the value itself
       ```
 
-      so the phrase *"Estimated range"* is spoken **twice**. The visible `600 km` is
-      `aria-hidden="true"` because it animates and must not be counted out loud.
-      **Record whether that reads as redundant or merely verbose.** If it needs fixing, the remedy
-      is to leave `#nala-live` **empty at rest** and populate it only transiently, restoring
-      `#nala-value` to a readable node. **Do not apply that blind** — it trades a browse-mode
-      repetition for the risk that some readers drop a too-rapidly-repopulated region.
+      **`#nala-live` is empty at rest**, so *"Estimated range"* should be spoken **once**, not twice.
+      **This expectation is the post-fix state.** Before `7e69034`, `#nala-value` carried
+      `aria-hidden="true"` and the only readable copy of the number was the clipped live region — so
+      browsing never reached the result at all. The number is now a plain readable node and the live
+      region speaks only on change. If you hear the label twice, or no number, that is a regression.
 - [ ] **Step 5** — exactly **one** announcement per change ("Estimated range 595 kilometres."),
       focus stays on the dropdown, and the count-up is **never** read digit by digit.
 - [ ] **Step 7 — the reason focus is placed where it is.** Expected: *"Estimated range, dialog"*
@@ -407,7 +408,8 @@ Tick only what you observed. **An untested box is not a pass.**
       applied.
 - [ ] **Steps 9–10** — all three dismissals (Escape, × button, click outside) close the dialog
       **and** return focus to the ⓘ button, which is re-announced.
-- [ ] **Step 11** — Form Controls lists exactly the four dropdowns and the two buttons; Landmarks
+- [ ] **Step 11** — Form Controls lists the four dropdowns, the one button (`#nala-info-btn`) and the
+      link (`#nala-cta`); the modal's Close button must NOT appear, being inside the `hidden` overlay. Landmarks
       lists a banner and a main.
 
 ## Run 2 — WAVE
@@ -501,7 +503,7 @@ deviation from the named protocol, not a substitute.
 | 11 | **Can `VO`+arrow escape the dialog?** (≥ 8 presses) | No. Cycles between the paragraph and Close only | ✅ |
 | 12 | Escape / × / click-outside — all three close **and** re-announce the ⓘ button | All three return focus to the ⓘ button | ✅ |
 | 13 | "Learn more" announced as a **link**, with destination and new-tab warning | *"link, Learn more about range on volkswagen.co.uk, opens in a new tab"* — full name read | ✅ |
-| 14 | Rotor → Form Controls: 4 dropdowns + 2 buttons, no blank, no duplicate | The focusable set is listed | ✅ |
+| 14 | Rotor → Form Controls: 4 dropdowns + 1 button + 1 link, no blank, no duplicate | The focusable set is listed | ✅ |
 | 15 | Rotor → Landmarks: banner + main present | banner and main | ✅ |
 
 All 15 rows evidenced. Answers are paraphrase, not verbatim transcript — the Caption Panel was not enabled, so exact
@@ -549,7 +551,7 @@ starts on a child. The user also arrives by activating a button named *"More inf
 estimated range"*, so the context is already given, and the visible `h2` still serves sighted users.
 
 **`aria-describedby` on the dialog was rejected**, not overlooked. It is the canonical way to get
-both, but that paragraph is ~800 characters and long description text is known to be truncated or
+both, but that paragraph is 945 characters and long description text is known to be truncated or
 dropped by some readers. Trading a reliably-announced paragraph for a possibly-truncated one is a
 bad swap. If it is ever revisited, A/B it **by ear** — no tool can measure truncation.
 
@@ -571,7 +573,7 @@ change to `index.html`:
 | Alerts | 1 — *"Possible heading"* |
 | Features | 4 — alt text, skip link, skip-link target, language |
 | Structural elements | 4 — h1, h2, header, main |
-| ARIA | 33 — incl. **1 ARIA popup**, **1 alert/live region**, 16 `aria-hidden` |
+| ARIA | 33 — incl. **1 ARIA popup**, **1 alert/live region**, 15 `aria-hidden` |
 | AIM score | **10 / 10** |
 
 **Why the hosted run is admissible here, unlike on the Visualizer.** That component builds behind an
@@ -639,10 +641,10 @@ hidden and was expected to flag `#nala-live`; it did not. Worth knowing that the
 **2.1 AA**, which excludes every criterion 2.2 added — `target-size` carries a `wcag22aa` tag, so a
 clean 2.1 result is real and says nothing whatsoever about SC 2.5.8. It was set to 2.2 here.
 
-> **Correction to §6 Run 3, from this run.** The instruction said to run *"Test #16 Target Size"* as a
-> standalone guided test — copied from the Visualizer's pack. **In this build target size is covered
-> under Interactive Elements**, per axe DevTools' own testing guide. There is no separate numbered
-> target-size test to hunt for.
+> **Where target size is actually tested.** **Interactive Elements covers it** in current builds, per
+> axe DevTools' own testing guide — there is no separate numbered target-size guided test to hunt
+> for. §6 Run 3 previously said otherwise, copied from the Visualizer's pack; that instruction has
+> been corrected rather than left for the next tester to trip over.
 
 **Version deviation:** the protocol names **4.131.2**; the installed build was not recorded. Rule
 sets only grow between versions, so a newer build passing is at least as strong as the named one
@@ -679,13 +681,14 @@ audit naming NVDA will not accept VoiceOver evidence for that line item. §1 has
    needs 3:1. It is a core design-system value this prototype does not own, which changes *who
    fixes it*, not *whether it fails*. No tool reports it.
 2. **Only one screen reader has been run.** VoiceOver on Safari, §9.1. The protocol names **NVDA**,
-   which has not been run, and readers differ in what they *announce*. Two rows of §9.1 are also
-   still blank, and the run was recorded as paraphrase rather than a captured transcript.
-3. **Two recorded decisions rest on readings an auditor may reject** — SC 2.5.3 on all four select
+   which has not been run, and readers differ in what they *announce*. The run was recorded as paraphrase
+   rather than a captured transcript, and mixed local with live testing — which produced one false
+   finding, retracted in §9.1 row 13.
+3. **The recorded decisions rest on readings an auditor may reject** — SC 2.5.3 on all four select
    names, and the 2.4.4 link text. Both are written down rather than smoothed over.
 
 **The precedent for that wording** is the Visualizer's pack, which says *"meets WCAG 2.2 A/AA on
 every automated and runtime check available, with five documented discretionary decisions, pending
 screen-reader verification."* Quote this shape of claim rather than inventing a stronger one: on this
-very suite, the one defect class that shipped (unnamed inline SVGs, SC 1.1.1) was passed by axe,
-WAVE and Nu alike. **Tool-clean is not compliant.**
+very app, the one defect that shipped (`aria-hidden` on the result value, §9.1 row 6) was passed by
+axe at 96 rules, WAVE and Nu alike. **Tool-clean is not compliant.**

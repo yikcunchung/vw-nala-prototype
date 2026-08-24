@@ -1,7 +1,7 @@
 # A11y 1 of 3 — WCAG 2.2 criterion checklist
 
 **App:** VW NaLa (`nala`), a single-page simulator.
-**Audited:** 2026-08-23 against the live deployment at commit **`4304d62`**.
+**Audited:** 2026-08-24 against the live deployment at commit **`4304d62`**.
 **Deployed at:** https://yikcunchung.github.io/vw-nala-prototype/
 **Live verified identical to source:** `index.html` on Pages is byte-for-byte equal to the audited
 file (sha256 `89058e665d02e64a…`, 48779 bytes), so every figure below describes what actually ships.
@@ -28,8 +28,9 @@ criteria are not required and are not listed.
 | ⚖️ Decide | Passes, but on an arguable reading — record the decision |
 | ❌ Inherited | Fails, and the cause is a **core design-system value** this app does not own |
 
-**56 criteria assessed. 1 inherited failure, 0 failures owned by this app, 0 open items.**
-22 verified · 8 inspected · 24 not applicable · 1 decision to record · 1 inherited failure.
+**56 criteria assessed. 1 inherited failure, 0 failures owned by this app, 0 open criteria.**
+(NVDA is an outstanding *run*, not an open criterion — see the end of this document.)
+23 verified · 8 inspected · 23 not applicable · 1 decision to record · 1 inherited failure.
 
 ---
 
@@ -113,7 +114,7 @@ criteria are not required and are not listed.
 |---|---|---|---|---|---|
 | **2.4.1** | Bypass Blocks | A | Yes | ✅ Pass | `a.skip-link → #nala-main`; the target exists and the link is the first tab stop, with a custom `2px solid #C86C03` `:focus-visible` ring at `outline-offset: -4px`. |
 | **2.4.2** | Page Titled | A | Yes | ✅ Pass | `<title>Volkswagen NaLa</title>` — descriptive and unique. |
-| **2.4.3** | Focus Order | A | Yes | ✅ Pass | Focus order follows the sentence, which is also the visual order. All 7 controls reached in DOM order at 1440 and at 320×256 @ dsf 4. Opening the modal moves focus to its close button; closing returns it to the invoking button — both driven and confirmed. |
+| **2.4.3** | Focus Order | A | Yes | ✅ Pass | Focus order follows the sentence, which is also the visual order. All 7 controls reached in DOM order at 1440 and at 320×256 @ dsf 4. Opening the modal moves focus to **its body copy, not the close button** — deliberately, so a screen reader announces the explanation rather than skipping it; closing returns focus to the invoking button. Both driven and confirmed by ear (`a11y-2` §9.1 rows 10 and 12). |
 | **2.4.4** | Link Purpose (In Context) | A | Yes | ✅ Pass | Two links. The skip link is named. The **"Learn more" CTA is an external link-out** to `volkswagen.co.uk/…/range-simulator.html`; bare *"Learn more"* is the classic non-descriptive link text, so an appended `.sr-only` tail gives it purpose and destination: full name **"Learn more about range on volkswagen.co.uk (opens in a new tab)"**. Appended, never spliced, so the visible text stays a contiguous prefix. `rel="noopener noreferrer"` with `target="_blank"`. |
 | **2.4.5** | Multiple Ways | AA | No | ⚪ N/A | A standalone single page. SC 2.4.5 applies to a *set* of web pages; there is no set. |
 | **2.4.6** | Headings and Labels | AA | Yes | ✅ Pass | `h1` "What is the range …" and, inside the dialog, `h2#nala-range-modal-title` "Estimated range" — no skipped levels. Every control's label describes its purpose. |
@@ -130,7 +131,7 @@ criteria are not required and are not listed.
 | **2.5.3** | Label in Name | A | Yes | ⚖️ Decide | **The decision changed shape — the previous `#select-wea` splice no longer exists.** Every select now carries a concise `aria-label` that deliberately does *not* mirror the surrounding sentence prose. **The reading this rests on:** the words around each dropdown (*"of my"*, *"in"*, *"weather and I am driving"*) are running prose and the on-control text is the *value*, so no select has a visible *label* and 2.5.3 is satisfied trivially — the same position already settled for the Visualizer's `#select-model-lg`. **The counter-reading an auditor could take:** in a talking-sentence UI the prose *is* the label, in which case all four names would fail. Recorded, not hidden. **Why the new names are still the right call:** the old scheme made `#select-veh`'s name **mutate with its value** (JS rewrote the `ID.7` token feeding it) — names must be stable — and named the occupancy select *"weather and I am driving"*, which opens with a word about the previous control and never mentions people. |
 | **2.5.4** | Motion Actuation | A | No | ⚪ N/A | No device-motion or user-motion actuation. |
 | **2.5.7** | Dragging Movements | AA | No | ⚪ N/A | No dragging movement anywhere — no slider, no drag handle. |
-| **2.5.8** | Target Size (Minimum) | AA | Yes | ✅ Pass | No target under 24×24. The smallest, `button#nala-info-btn`, measures **23.797 × 24** as a border box but its real pointer target is **~36.7 × 36.8** via a transparent `::before` — hit-tested by ray-casting `elementFromPoint`, all four corners at ±12 return the button. The modal close button is a plain **32 × 32**. axe `target-size`: **7 pass / 0 violations** default, **1 pass / 0 violations** modal-open — one, not more, because `inert` removes every background control from the tree while the dialog is open, leaving its close button as the only target to measure. |
+| **2.5.8** | Target Size (Minimum) | AA | Yes | ✅ Pass | No target under 24×24. The smallest, `button#nala-info-btn`, measures **23.797 × 24** as a border box but its real pointer target is **~36.0 × 36.0** via a transparent `::before` — hit-tested by ray-casting `elementFromPoint`, all four corners at ±12 return the button. The modal close button is a plain **32 × 32**. axe `target-size`: **7 pass / 0 violations** default, **1 pass / 0 violations** modal-open — one, not more, because `inert` removes every background control from the tree while the dialog is open, leaving its close button as the only target to measure. |
 
 
 # 3. Understandable
@@ -196,14 +197,15 @@ criteria are not required and are not listed.
 
 **Automated runs: complete.**
 - axe-core 4.13.0, **96 rules** (all nine default-disabled rules force-enabled, including `target-size`): **0 violations** across 5 viewports × 2 states, 0 JS exceptions.
-- **WAVE hosted, against the live deployment: 0 errors, 0 contrast errors, AIM score 10/10.** 1 alert ("Possible heading" on the bold *Estimated range* label — intentionally a label, not a heading).
+- **WAVE, hosted and by extension, against the live deployment: 0 errors, 0 contrast errors, AIM score 10/10**, in the default *and* dialog-open states. 1 alert ("Possible heading" on the **result digits** — a calculated value whose text changes on every interaction, not a section title).
+- **axe DevTools UI at WCAG 2.2 AA:** 0 issues in both states, Interactive Elements guided test clean.
 
-**All tool runs are complete. NVDA is the only outstanding run.** Protocol in `a11y-2-automated-testing.md` **§6**, checklist in **§7**,
-and results are recorded in **§9** — actions, grading and evidence are deliberately three separate
-sections so the tester records what happened rather than judging in the moment. **§9.1 is currently
-empty**: no screen reader has been run, and an empty row there is not a pass.
+**All tool runs are complete, and a VoiceOver pass has been run. NVDA is the only outstanding run.**
+Protocol in `a11y-2-automated-testing.md` **§6**, checklist in **§7**, results in **§9** — actions,
+grading and evidence are three separate sections so the tester records what happened rather than
+judging in the moment. **§9.1 is 15 of 15 rows evidenced.**
 
-| Run | Status | Why it is still open |
+| Run | Status | Notes |
 |---|---|---|
 | **VoiceOver** | ✅ **done** | Run against live on Safari, with Chrome as a second opinion — `a11y-2` §9.1. **It found a real defect every tool passed:** the visible result carried `aria-hidden`, so the number was unreachable. Fixed. Both open questions settled: the dialog does **not** leak to the virtual cursor, and the duplicated label no longer exists. |
 | **WAVE extension** | ✅ **done** | Run against live in both states — `a11y-2` §9.2. **0 errors, 0 contrast errors** with the dialog open as well as closed; the dialog introduces nothing. The 1 alert is *Possible heading* on the result digits, which are a calculated value, not a section title. |
@@ -215,17 +217,29 @@ not accept VoiceOver evidence for that line item.
 
 # Decisions an auditor could challenge
 
-24 of the 56 A/AA criteria have **no machine-testable ACT rule**, and several apply directly here
+23 of the 56 A/AA criteria have **no machine-testable ACT rule**, and several apply directly here
 (1.4.11, 1.4.13, 2.5.1, 2.5.2, 2.5.8, 2.4.11). For those, "passes" reflects a **judgement**, not a
 test result.
 
 **The strongest claim this evidence supports:**
 
-> *"This app meets WCAG 2.2 A/AA on every automated and runtime check available, with one
-> non-text-contrast failure inherited from the core component library and one discretionary
-> decision recorded, pending screen-reader verification."*
+> *"This app meets WCAG 2.2 A/AA on **every check the protocol names except NVDA** — axe both over
+> CDP at 96 rules and through the DevTools UI at 2.2 AA, WAVE hosted and by extension in both
+> states, the accessibility tree, real key events, literal 400% zoom, and a **VoiceOver pass on
+> Safari** — all against the live deployment, with **one non-text-contrast failure inherited from
+> the core component library**, **one criterion-level decision recorded (SC 2.5.3)** and **two
+> run-level trade-offs** documented in `a11y-2` §9.1."*
 
-Note what that does **not** say: it does not say "fully compliant". The select-border failure is
-real and measurable even though this app does not own the fix, and real screen-reader output has
-never been tested. The one defect class found on this suite (unnamed graphics, SC 1.1.1) was
-invisible to axe, WAVE and Nu alike — tool-clean is not the same as compliant.
+Note what that does **not** say: it does not say "fully compliant". Two concrete reasons:
+
+1. **SC 1.4.11 genuinely fails** — the select border is 2.29:1 against the page background and needs
+   3:1. It is a core design-system value this app does not own, which changes *who fixes it*, not
+   *whether it fails*.
+2. **NVDA has never been run.** VoiceOver has, and it is a documented deviation rather than a
+   substitute.
+
+**And the VoiceOver run is the argument for why the manual passes exist.** It found `#nala-value`
+carrying `aria-hidden="true"` — the app's headline number absent from the accessibility tree, with
+only a clipped live region as the readable copy, so browsing the result panel never reached the
+result. **axe at 96 rules, WAVE and Nu all passed it**, across ten runs, zero violations.
+Tool-clean is not the same as compliant.

@@ -1,10 +1,10 @@
 # A11y 1 of 3 — WCAG 2.2 criterion checklist
 
 **App:** VW NaLa (`nala`), a single-page simulator.
-**Audited:** 2026-08-23 against the live deployment at commit **`b59ee16`**.
+**Audited:** 2026-08-23 against the live deployment at commit **`4304d62`**.
 **Deployed at:** https://yikcunchung.github.io/vw-nala-prototype/
 **Live verified identical to source:** `index.html` on Pages is byte-for-byte equal to the audited
-file (sha256 `4fb0bbd45716bec5…`, 47323 bytes), so every figure below describes what actually ships.
+file (sha256 `89058e665d02e64a…`, 48779 bytes), so every figure below describes what actually ships.
 **Scope:** the whole page. This app is standalone, so there is no component-versus-page split and
 nothing is out of scope. **PDFs are excluded** — the app ships none; they would be a separate
 conformance surface under EN 301 549 clause 10, checked with PAC.
@@ -130,7 +130,7 @@ criteria are not required and are not listed.
 | **2.5.3** | Label in Name | A | Yes | ⚖️ Decide | **The decision changed shape — the previous `#select-wea` splice no longer exists.** Every select now carries a concise `aria-label` that deliberately does *not* mirror the surrounding sentence prose. **The reading this rests on:** the words around each dropdown (*"of my"*, *"in"*, *"weather and I am driving"*) are running prose and the on-control text is the *value*, so no select has a visible *label* and 2.5.3 is satisfied trivially — the same position already settled for the Visualizer's `#select-model-lg`. **The counter-reading an auditor could take:** in a talking-sentence UI the prose *is* the label, in which case all four names would fail. Recorded, not hidden. **Why the new names are still the right call:** the old scheme made `#select-veh`'s name **mutate with its value** (JS rewrote the `ID.7` token feeding it) — names must be stable — and named the occupancy select *"weather and I am driving"*, which opens with a word about the previous control and never mentions people. |
 | **2.5.4** | Motion Actuation | A | No | ⚪ N/A | No device-motion or user-motion actuation. |
 | **2.5.7** | Dragging Movements | AA | No | ⚪ N/A | No dragging movement anywhere — no slider, no drag handle. |
-| **2.5.8** | Target Size (Minimum) | AA | Yes | ✅ Pass | No target under 24×24. The smallest, `button#nala-info-btn`, measures **23.797 × 24** as a border box but its real pointer target is **~36.7 × 36.8** via a transparent `::before` — hit-tested by ray-casting `elementFromPoint`, all four corners at ±12 return the button. The modal close button is a plain **32 × 32**. axe `target-size`: **7 pass / 0 violations** default, **8 pass / 0 violations** modal-open. |
+| **2.5.8** | Target Size (Minimum) | AA | Yes | ✅ Pass | No target under 24×24. The smallest, `button#nala-info-btn`, measures **23.797 × 24** as a border box but its real pointer target is **~36.7 × 36.8** via a transparent `::before` — hit-tested by ray-casting `elementFromPoint`, all four corners at ±12 return the button. The modal close button is a plain **32 × 32**. axe `target-size`: **7 pass / 0 violations** default, **1 pass / 0 violations** modal-open — one, not more, because `inert` removes every background control from the tree while the dialog is open, leaving its close button as the only target to measure. |
 
 
 # 3. Understandable

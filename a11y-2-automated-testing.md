@@ -64,8 +64,8 @@ Bare `axe.run(document)` plus all nine default-disabled rules force-enabled (**9
 axe-core 4.13.0). Viewports: 1440×900, 768×1024, 390×844, 320×256 @ dsf 1, and 320×256 @ dsf 4
 (literal 400% zoom). **Each viewport run twice — default state and modal-open state** (10 runs).
 
-**Run against the live deployment**, not a local copy, at commit `b59ee16` — and the live
-`index.html` was confirmed byte-for-byte identical to source first (sha256 `4fb0bbd45716bec5…`).
+**Run against the live deployment**, not a local copy, at commit `4304d62` — and the live
+`index.html` was confirmed byte-for-byte identical to source first (sha256 `89058e665d02e64a…`).
 Auditing localhost and *reporting* it as live is the easiest way to publish a figure that does not
 describe what ships; see §3.
 
@@ -73,7 +73,7 @@ describe what ships; see §3.
 |---|---|
 | Rules executed | 96 |
 | Violations | **0** in all 10 runs |
-| `target-size` | **7 pass** default / **8 pass** modal-open, 0 violations |
+| `target-size` | **7 pass** default / **1 pass** modal-open, 0 violations |
 | JS exceptions | **0** |
 | Horizontal scroll | none, at any viewport, in either state |
 
@@ -83,7 +83,7 @@ Measured at 1440×900 via `Accessibility.getFullAXTree` (unignored nodes only).
 
 | Measure | Default | Modal open |
 |---|---|---|
-| Nodes | 80 | **20** |
+| Nodes | 81 | **20** |
 | Named | 62 | 18 |
 | **Unnamed interactive / graphic** | **0** | **0** |
 | Duplicate role+name | 0 | 0 |
@@ -106,7 +106,7 @@ nothing behind the dialog left to navigate to.
 
 ## WAVE — real engine, live public URL
 
-Run against `https://yikcunchung.github.io/vw-nala-prototype/` at commit `b59ee16`, and re-run
+Run against `https://yikcunchung.github.io/vw-nala-prototype/` at commit `4304d62`, and re-run
 after every subsequent change to `index.html` — an earlier run against the pre-dialog build is not
 evidence for this one.
 
@@ -621,7 +621,7 @@ hidden and was expected to flag `#nala-live`; it did not. Worth knowing that the
 | Scan | Result |
 |---|---|
 | axe-core 4.13.0 over CDP, **96 rules**, 5 viewports × 2 states, live | **0 violations**, 0 JS exceptions |
-| `target-size` (SC 2.5.8) force-enabled | **7 pass** default / **8 pass** modal-open, 0 violations |
+| `target-size` (SC 2.5.8) force-enabled | **7 pass** default / **1 pass** modal-open, 0 violations |
 | `color-contrast` incomplete | 1, modal-open at ≥390px — resolved by hand to **15.81:1 PASS** |
 
 ### UI run

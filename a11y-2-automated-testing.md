@@ -40,7 +40,7 @@ The local `index.html` and the deployed build are **byte-identical**.
 | Required | Status | Note |
 |---|---|---|
 | **axe DevTools 4.131.2** | ◐ **Equivalent, not identical** | This audit ran **axe-core 4.13.0**, the library the extension embeds, over CDP with **no `runOnly` filter and all nine default-disabled rules force-enabled (96 rules)** — a superset of the extension's default scan. One run through the 4.131.2 UI is still worth doing to satisfy the protocol literally; expect agreement — §6 Run 3 |
-| **WAVE Evaluation Tool 3.3.1.0** | ◐ **Hosted done, extension outstanding** | Real engine via `wave.webaim.org/report#/<url>` against the public URL: **0 errors, 0 contrast errors, AIM 10/10**. Valid here — this app does not lazy-build, so hosted WAVE saw the real page. The **extension** run remains, and is the only way to reach the **modal-open** state — §6 Run 2 |
+| **WAVE Evaluation Tool 3.3.1.0** | ✅ **Done — hosted and extension, both states** | Real engine via `wave.webaim.org/report#/<url>` against the public URL: **0 errors, 0 contrast errors, AIM 10/10**. Valid here — this app does not lazy-build, so hosted WAVE saw the real page. The **extension** run then covered the **modal-open** state: identical counts, the dialog introduces nothing — §9.2 |
 | **Zoom 400% and 320 × 256 px** | ✅ **Done** | `320×256 @ deviceScaleFactor 4`. **dsf 1 is a small screen, not a zoomed one** |
 | **Operated via the keyboard** | ✅ **Done** | Driven with real `Input.dispatchKeyEvent` |
 | **NVDA 2026.1.1.55980** | ❌ **Not done** | The one real screen-reader gap. **VoiceOver has now been run — §9.1** — and is a documented deviation, not a substitute. Protocol §6 Run 1, checklist §7, results §9.1 |
@@ -322,8 +322,9 @@ one thing the hosted service cannot do: **the modal-open state.**
    (The old `#select-veh-hint` / `#select-wea-hint` spans no longer exist — the selects now use a
    direct `aria-label`.)
 
-> **Expect 1 alert, "Possible heading."** It is the bold *Estimated range* label. It is a label for
-> the readout, not a section heading. Not a defect — do not "fix" it into an `<h3>`.
+> **Expect 1 alert, "Possible heading."** It fires on the **result digits** — large bold standalone
+> text. They are a calculated value, not a section title, and their text changes on every
+> interaction. Not a defect — do not "fix" it into an `<h3>`.
 
 ## Run 3 — axe DevTools
 
@@ -557,7 +558,7 @@ announced, and no tool reported it. nala is built to avoid that specific defect:
 the modal's body copy, not the close button. Row 10 is the confirmation that the fix works in
 speech, not just in the tree.
 
-## 9.2 WAVE — ◐ hosted done, extension outstanding
+## 9.2 WAVE — ✅ COMPLETE (hosted + extension, both states)
 
 **Hosted engine** (`wave.webaim.org/report#/<url>`), against the live deployment, re-run after every
 change to `index.html`:
@@ -580,11 +581,39 @@ back out of WAVE's own report, and by **1 ARIA popup / 1 Heading level 2** appea
 census: those are the dialog's `aria-haspopup` and its `h2`, so the modal markup is demonstrably in
 what WAVE parsed.
 
-**The 1 alert is not a defect.** *"Possible heading"* fires on the bold standalone **Estimated
-range**. It is a label for the value readout, not a section title. Do not promote it to an `<h3>`.
+**The 1 alert is not a defect.** *"Possible heading — Text appears to be a heading but is not a
+heading element"* fires on **the result digits** (`#nala-value`, e.g. *600 km*), which render at
+44–56px in VW Head Bold and standalone — enough to trip WAVE's heuristic.
 
-**Still outstanding: the extension run**, which is the only way to score the **modal-open** state —
-WAVE analyses a URL and cannot open a dialog.
+**Leave it.** That text is the *output of a calculation*, not a section title: it changes on every
+dropdown interaction. Promoting it to an `<h3>` would put a heading in the document outline whose
+text mutates continuously, which is worse than the alert.
+
+> **Two corrections on the record.** (1) This doc previously said the alert fired on the *"Estimated
+> range"* label. That was an **inference from the hosted count, never verified** — the extension run
+> established it is the digits. (2) The alert most likely **moved** here as a side effect of
+> `7e69034`: before that commit `#nala-value` carried `aria-hidden="true"` and WAVE would have
+> skipped it. Removing that to make the result reachable also made it visible to WAVE's heuristic.
+> A consequence of the fix, not a regression.
+
+### Extension run — the modal-open state
+
+**WAVE browser extension, against live, run twice: default and with the ⓘ dialog open.** This is the
+half the hosted service cannot reach, since it analyses a URL and cannot activate a control.
+
+| State | Errors | Contrast errors | Alerts |
+|---|---|---|---|
+| Default | **0** | **0** | 1 — *Possible heading* on the result digits |
+| **Modal open** | **0** | **0** | 1 — unchanged |
+
+**The dialog introduces nothing.** Identical counts in both states, which is the expected result and
+worth stating: the `h2` is a real heading so it draws no "possible heading" alert, and the body copy
+is plain text. The single alert persists across both states because the result panel is still
+rendered behind the overlay.
+
+**The anticipated `.sr-only` contrast artifact did not appear.** WAVE does not treat a 1×1 clip as
+hidden and was expected to flag `#nala-live`; it did not. Worth knowing that the mitigation there —
+`#nala-live { color: #fff }` — is doing its job against the real engine, not just in theory.
 
 ## 9.3 axe DevTools — ◐ engine-equivalent done, UI outstanding
 

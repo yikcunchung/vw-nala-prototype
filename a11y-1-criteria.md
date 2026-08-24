@@ -198,7 +198,7 @@ criteria are not required and are not listed.
 - axe-core 4.13.0, **96 rules** (all nine default-disabled rules force-enabled, including `target-size`): **0 violations** across 5 viewports × 2 states, 0 JS exceptions.
 - **WAVE hosted, against the live deployment: 0 errors, 0 contrast errors, AIM score 10/10.** 1 alert ("Possible heading" on the bold *Estimated range* label — intentionally a label, not a heading).
 
-**One manual run remains, plus NVDA.** Protocol in `a11y-2-automated-testing.md` **§6**, checklist in **§7**,
+**All tool runs are complete. NVDA is the only outstanding run.** Protocol in `a11y-2-automated-testing.md` **§6**, checklist in **§7**,
 and results are recorded in **§9** — actions, grading and evidence are deliberately three separate
 sections so the tester records what happened rather than judging in the moment. **§9.1 is currently
 empty**: no screen reader has been run, and an empty row there is not a pass.
@@ -207,7 +207,7 @@ empty**: no screen reader has been run, and an empty row there is not a pass.
 |---|---|---|
 | **VoiceOver** | ✅ **done** | Run against live on Safari, with Chrome as a second opinion — `a11y-2` §9.1. **It found a real defect every tool passed:** the visible result carried `aria-hidden`, so the number was unreachable. Fixed. Both open questions settled: the dialog does **not** leak to the virtual cursor, and the duplicated label no longer exists. |
 | **WAVE extension** | ✅ **done** | Run against live in both states — `a11y-2` §9.2. **0 errors, 0 contrast errors** with the dialog open as well as closed; the dialog introduces nothing. The 1 alert is *Possible heading* on the result digits, which are a calculated value, not a section title. |
-| **axe DevTools UI** | outstanding | Engine-equivalent to the CDP run and expected to agree, but the protocol names the UI. Set the standard to **WCAG 2.2 AA** — the extension may default to 2.1, which silently excludes `target-size`. |
+| **axe DevTools UI** | ✅ **done** | Run at **WCAG 2.2 AA** in both states, 0 issues, Interactive Elements guided test clean — `a11y-2` §9.3. Agrees with the CDP run. Installed version not recorded: a deviation to capture if a formal audit asks. |
 
 **NVDA 2026.1.1.55980 is the one real screen-reader gap.** VoiceOver has now been run (`a11y-2`
 §9.1) and is a **deviation, not a substitution** — a formal BITV / EN 301 549 audit naming NVDA will

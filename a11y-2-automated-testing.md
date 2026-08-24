@@ -39,7 +39,7 @@ The local `index.html` and the deployed build are **byte-identical**.
 
 | Required | Status | Note |
 |---|---|---|
-| **axe DevTools 4.131.2** | ◐ **Equivalent, not identical** | This audit ran **axe-core 4.13.0**, the library the extension embeds, over CDP with **no `runOnly` filter and all nine default-disabled rules force-enabled (96 rules)** — a superset of the extension's default scan. One run through the 4.131.2 UI is still worth doing to satisfy the protocol literally; expect agreement — §6 Run 3 |
+| **axe DevTools 4.131.2** | ✅ **Done — UI at WCAG 2.2 AA, 0 issues** | This audit ran **axe-core 4.13.0**, the library the extension embeds, over CDP with **no `runOnly` filter and all nine default-disabled rules force-enabled (96 rules)** — a superset of the extension's default scan. The UI run has now been done at **WCAG 2.2 AA** in both states with **0 issues**, and Interactive Elements run clean — the two agree. Installed version not recorded: a deviation to capture if a formal audit asks — §9.3 |
 | **WAVE Evaluation Tool 3.3.1.0** | ✅ **Done — hosted and extension, both states** | Real engine via `wave.webaim.org/report#/<url>` against the public URL: **0 errors, 0 contrast errors, AIM 10/10**. Valid here — this app does not lazy-build, so hosted WAVE saw the real page. The **extension** run then covered the **modal-open** state: identical counts, the dialog introduces nothing — §9.2 |
 | **Zoom 400% and 320 × 256 px** | ✅ **Done** | `320×256 @ deviceScaleFactor 4`. **dsf 1 is a small screen, not a zoomed one** |
 | **Operated via the keyboard** | ✅ **Done** | Driven with real `Input.dispatchKeyEvent` |
@@ -338,7 +338,8 @@ one thing the hosted service cannot do: **the modal-open state.**
 5. In rule settings, **enable the rules that are off by default**, `target-size` above all. If the
    UI will not confirm which rules ran, record that — do not claim 2.5.8 was covered.
 6. **Scan all of my page.** Then **open the ⓘ modal and scan again.**
-7. Run the **Interactive Elements** guided test, then **Test #16 Target Size**.
+7. Run the **Interactive Elements** guided test — **target size is covered under it** in current
+   builds, rather than as a separate numbered test.
 
 > **Guided-test zeros are not passes.** The Intelligent Guided Tests are semi-automated and must
 > each be launched by hand. An unrun test reports "Runs: 0, Total issues: 0", and the summary rolls
@@ -615,7 +616,7 @@ rendered behind the overlay.
 hidden and was expected to flag `#nala-live`; it did not. Worth knowing that the mitigation there —
 `#nala-live { color: #fff }` — is doing its job against the real engine, not just in theory.
 
-## 9.3 axe DevTools — ◐ engine-equivalent done, UI outstanding
+## 9.3 axe DevTools — ✅ COMPLETE (UI run + CDP run agree)
 
 | Scan | Result |
 |---|---|
@@ -623,12 +624,36 @@ hidden and was expected to flag `#nala-live`; it did not. Worth knowing that the
 | `target-size` (SC 2.5.8) force-enabled | **7 pass** default / **8 pass** modal-open, 0 violations |
 | `color-contrast` incomplete | 1, modal-open at ≥390px — resolved by hand to **15.81:1 PASS** |
 
-**Version deviation to record when the UI run happens:** the protocol names **4.131.2**. The CDP run
-used **axe-core 4.13.0**, the library the extension embeds — with no `runOnly` filter *and* all nine
-default-disabled rules force-enabled, which is a **superset** of the extension's default scan. A UI
-run is still owed to satisfy the protocol literally; expect agreement.
+### UI run
 
-**What no axe version can close.** axe's `color-contrast` rule implements **SC 1.4.3 (text) only**,
+**axe DevTools extension, against live, standard set to WCAG 2.2 AA.**
+
+| Scan | Result |
+|---|---|
+| Automatic, **WCAG 2.2 AA**, whole page | **0 issues** |
+| Automatic, **WCAG 2.2 AA**, dialog open | **0 issues** |
+| Intelligent Guided Test — **Interactive Elements** | **Run — no issues.** Covers target size in this build |
+| Other guided tests | Not run |
+
+**Setting the standard to 2.2 is what makes this run mean anything.** The extension can default to
+**2.1 AA**, which excludes every criterion 2.2 added — `target-size` carries a `wcag22aa` tag, so a
+clean 2.1 result is real and says nothing whatsoever about SC 2.5.8. It was set to 2.2 here.
+
+> **Correction to §6 Run 3, from this run.** The instruction said to run *"Test #16 Target Size"* as a
+> standalone guided test — copied from the Visualizer's pack. **In this build target size is covered
+> under Interactive Elements**, per axe DevTools' own testing guide. There is no separate numbered
+> target-size test to hunt for.
+
+**Version deviation:** the protocol names **4.131.2**; the installed build was not recorded. Rule
+sets only grow between versions, so a newer build passing is at least as strong as the named one
+passing — but the exact version is missing from this record and should be captured if a formal audit
+asks. **The UI and CDP runs agree**, which is the useful result: the CDP run used axe-core 4.13.0,
+the library the extension embeds, with no `runOnly` filter and all nine default-disabled rules
+force-enabled — a **superset** of the extension's default scan.
+
+**What no axe version can close, at either 2.1 or 2.2.**
+
+axe's `color-contrast` rule implements **SC 1.4.3 (text) only**,
 and axe-core ships **no rule for SC 1.4.11 non-text contrast**. The select border at **2.29:1** is a
 real failure that every axe run — CDP or UI, 2.1 or 2.2 — will pass. See §2.
 
@@ -642,11 +667,11 @@ audit naming NVDA will not accept VoiceOver evidence for that line item. §1 has
 
 # 10. The claim this evidence supports
 
-> *"This app meets WCAG 2.2 A/AA on every automated and runtime check available — axe at 96 rules
-> across five viewports and two states, WAVE, the accessibility tree, real key events and literal
-> 400% zoom, all against the live deployment — **and has been verified against VoiceOver on Safari**,
-> with **one non-text-contrast failure inherited from the core component library**, four
-> discretionary decisions recorded, and **NVDA verification still outstanding**."*
+> *"This app meets WCAG 2.2 A/AA on **every check the protocol names except NVDA** — axe both over
+> CDP at 96 rules and through the DevTools UI at WCAG 2.2 AA, WAVE hosted and by extension in both
+> states, the accessibility tree, real key events, literal 400% zoom, and a **VoiceOver pass on
+> Safari** — all against the live deployment, with **one non-text-contrast failure inherited from the
+> core component library**, four discretionary decisions recorded, and **NVDA still outstanding**."*
 
 **What it must not say: "fully compliant."** Three specific reasons, not hedging:
 

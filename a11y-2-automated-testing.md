@@ -606,7 +606,7 @@ naming NVDA will not accept VoiceOver evidence for that line item. §1 has the r
 > CDP at 96 rules and through the DevTools UI at WCAG 2.2 AA, WAVE hosted and by extension in both
 > states, the accessibility tree, real key events, literal 400% zoom, and a **VoiceOver pass on
 > Safari** — all against the live deployment, with **one non-text-contrast failure inherited from the
-> core component library**, four discretionary decisions recorded, and **NVDA still outstanding**."*
+> core component library**, one discretionary decision recorded, and **NVDA still outstanding**."*
 
 **What it must not say: "fully compliant."** Three reasons:
 

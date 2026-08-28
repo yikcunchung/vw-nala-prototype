@@ -25,7 +25,7 @@ Target **Level A + AA**, per EN 301 549 clause 9, hence BFSG / the European Acce
 
 **56 criteria assessed. 1 inherited failure, 0 failures owned by this app, 0 open criteria.**
 (NVDA is an outstanding *run*, not an open criterion — see the end of this document.)
-24 verified · 8 inspected · 23 not applicable · 1 inherited failure.
+23 verified · 8 inspected · 23 not applicable · 1 inherited failure · 1 decision.
 
 ---
 
@@ -110,7 +110,7 @@ Target **Level A + AA**, per EN 301 549 clause 9, hence BFSG / the European Acce
 | **2.4.1** | Bypass Blocks | A | Yes | ✅ Pass | `a.skip-link → #nala-main`; target exists, link is the first tab stop, `2px solid #C86C03` ring at `outline-offset: -4px`. |
 | **2.4.2** | Page Titled | A | Yes | ✅ Pass | `<title>Volkswagen NaLa</title>` — descriptive and unique. |
 | **2.4.3** | Focus Order | A | Yes | ✅ Pass | Order follows the sentence, which is the visual order; all 7 controls in DOM order at 1440 and 320×256 @ dsf 4. The modal focuses **its body copy, not the close button**, so the explanation is announced, not skipped; closing returns focus to the invoking button. Driven and heard (`a11y-2` §9.1 rows 10, 12). |
-| **2.4.4** | Link Purpose (In Context) | A | Yes | ✅ Pass | Two links; the skip link is named. The **"Learn more" CTA links out** to `volkswagen.co.uk/…/range-simulator.html`; bare *"Learn more"* is non-descriptive, so an appended `.sr-only` tail gives the full name **"Learn more about range on volkswagen.co.uk (opens in a new tab)"** — appended, never spliced, so the visible text stays a contiguous prefix. `rel="noopener noreferrer"`, `target="_blank"`. |
+| **2.4.4** | Link Purpose (In Context) | A | Yes | ⚖️ Decide | Two links; the skip link is named. The **"Learn more" CTA links out** to `volkswagen.co.uk/…/range-simulator.html`; bare *"Learn more"* is non-descriptive, so an appended `.sr-only` tail gives the full name **"Learn more about range on volkswagen.co.uk (opens in a new tab)"** — appended, never spliced, so the visible text stays a contiguous prefix. `rel="noopener noreferrer"`, `target="_blank"`. An auditor requiring the purpose in the visible text itself, not an appended sr-only tail, may reject this reading — see a11y-2 §10. |
 | **2.4.5** | Multiple Ways | AA | No | ⚪ N/A | Applies to a *set* of pages. This is one standalone page. |
 | **2.4.6** | Headings and Labels | AA | Yes | ✅ Pass | `h1` "What is the range …", dialog `h2#nala-range-modal-title` "Estimated range" — no skipped levels. Every label describes its control. |
 | **2.4.7** | Focus Visible | AA | Yes | ✅ Pass | Every focused control shows a `2px solid #C86C03` outline — all stops, both viewports, both states. Ring contrast 3.44:1 cream, 4.22:1 navy, 3.75:1 modal white. |

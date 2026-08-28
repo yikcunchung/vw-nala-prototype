@@ -2,11 +2,12 @@
   "name": "vw-nala-prototype",
   "private": true,
   "version": "0.0.0",
-  "description": "VW NaLa accessibility prototype — behavioural specification for the production port",
+  "description": "VW NaLa accessibility prototype \u2014 behavioural specification for the production port",
   "scripts": {
     "test": "playwright test",
     "test:headed": "playwright test --headed",
-    "test:report": "playwright show-report"
+    "test:report": "playwright show-report",
+    "test:desktop": "playwright test --project=desktop-1440"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.10.1",

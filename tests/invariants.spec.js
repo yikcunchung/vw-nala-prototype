@@ -12,10 +12,10 @@
 const { test, expect } = require('@playwright/test');
 
 const NAMES = {
-  'select-veh': 'my car model variant',
-  'select-env': 'driving location',
-  'select-wea': 'weather condition',
-  'select-occ': 'travelling',
+  'select-veh': 'of my car model variant',
+  'select-env': 'when I mostly drive',
+  'select-wea': 'in weather condition',
+  'select-occ': 'weather and I am driving',
 };
 
 test.beforeEach(async ({ page }) => {

@@ -11,18 +11,24 @@ specification, not source to copy.** About half of what matters here lives in Ja
 
 You need **six things**. Everything else in this repo is evidence for auditors.
 
-### 1. Name each dropdown with a plain `aria-label`
+### 1. Give each dropdown a real visible label, split static from dynamic
 
 ```html
-<select aria-label="of my car model variant">…</select>
+<span id="select-veh-model-static">Model: </span><span id="select-veh-family">ID.7</span>
+<select id="select-veh" aria-labelledby="select-veh-model-static select-veh-family">…</select>
 ```
 
-The four names are `of my car model variant`, `when I mostly drive`, `in weather
-condition`, `weather and I am driving` — each aligned to read naturally with the
-visible sentence words immediately before and after it. **Do not point the name at
-the sentence via `aria-labelledby`.** We tried; the floating label beside the vehicle
-select (`#select-veh-family`) is rewritten by JS on every change, so a name built from
-it changed every time the value changed.
+Each select is named by `aria-labelledby`, pointing at its own small visible label —
+"Model:"/family, "Road type", "Weather", "Occupancy" — not a plain `aria-label` string.
+Where the label has a part that changes (the vehicle family), it lives in its **own**
+separate span, so the static half can never drift. This mirrors the real core Select
+component's `label` + `isFloating` props: one static string, recomputed per render if
+part of it needs to vary — not a hand-rewritten DOM node.
+
+**Do not reunite the static and dynamic halves into one element.** An earlier version
+pointed `aria-labelledby` at a single span whose whole text JS rewrote on every change,
+so the name mutated including the part that should never move. Splitting them is what
+fixes it, not avoiding `aria-labelledby` altogether.
 
 ### 2. Do not hide the result number
 
@@ -82,7 +88,7 @@ npm install
 npm test
 ```
 
-**84 tests over 4 viewports.** They encode all six rules above plus the scanner
+**80 tests over 4 viewports.** They encode all six rules above plus the scanner
 checks. Green means you have it.
 
 The tests are also the shortest readable spec in this repo —

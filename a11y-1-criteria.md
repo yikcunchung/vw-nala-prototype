@@ -25,7 +25,7 @@ Target **Level A + AA**, per EN 301 549 clause 9, hence BFSG / the European Acce
 
 **56 criteria assessed. 1 inherited failure, 0 failures owned by this app, 0 open criteria.**
 (NVDA is an outstanding *run*, not an open criterion — see the end of this document.)
-23 verified · 8 inspected · 23 not applicable · 1 inherited failure · 1 decision.
+24 verified · 8 inspected · 23 not applicable · 1 inherited failure.
 
 ---
 
@@ -123,7 +123,7 @@ Target **Level A + AA**, per EN 301 549 clause 9, hence BFSG / the European Acce
 |---|---|---|---|---|---|
 | **2.5.1** | Pointer Gestures | A | Yes | ✅ Pass* | No path-based or multipoint gesture; every control is a single tap or click. |
 | **2.5.2** | Pointer Cancellation | A | Yes | ✅ Pass* | Activation is on the up-event — native `<button>` and `<select>`, no `mousedown` handlers. |
-| **2.5.3** | Label in Name | A | Yes | ✅ Pass | Each `aria-label` now echoes the visible sentence words immediately around it: `#select-veh` opens with *"of my"*, `#select-env` is exactly *"when I mostly drive"*, `#select-wea` opens with *"in"*, `#select-occ` is exactly *"weather and I am driving"*. This passes whether or not an auditor treats the surrounding prose as a label — the accessible name already contains it. **Do not build this via `aria-labelledby` pointing at a span** — that was tried, and made `#select-veh`'s name mutate with its value (the `ID.7` token). |
+| **2.5.3** | Label in Name | A | Yes | ✅ Pass | Each select is named by `aria-labelledby` pointing at its own real, visible label span: "Model:"+family for `#select-veh` (split into a static prefix and the mutating family value, in separate elements so the static half never drifts), "Road type" for `#select-env`, "Weather" for `#select-wea`, "Occupancy" for `#select-occ`. The name **is** the visible label, not merely compatible with it — closes 2.5.3 outright, not on an arguable reading. |
 | **2.5.4** | Motion Actuation | A | No | ⚪ N/A | No device- or user-motion actuation. |
 | **2.5.7** | Dragging Movements | AA | No | ⚪ N/A | No dragging — no slider, no drag handle. |
 | **2.5.8** | Target Size (Minimum) | AA | Yes | ✅ Pass | Nothing under 24×24. The smallest, `button#nala-info-btn`, is a **23.797 × 24** border box with a real target of **~36.0 × 36.0** via a transparent `::before` — ray-cast with `elementFromPoint`, all four corners at ±12 return the button. Nearest other target **86.8px**; modal close **32 × 32**. axe `target-size`: **7 pass / 0 violations** default, **1 pass / 0 violations** modal-open — 1 because `inert` removes every background target. |
@@ -156,7 +156,7 @@ Target **Level A + AA**, per EN 301 549 clause 9, hence BFSG / the European Acce
 | SC | Name | Lvl | Relevant | Status | Evidence / what to do |
 |---|---|---|---|---|---|
 | **3.3.1** | Error Identification | A | No | ⚪ N/A | No input can be in error: every control is a closed `<select>` with valid options. |
-| **3.3.2** | Labels or Instructions | A | Yes | ✅ Pass | Each control has a concise `aria-label` — *of my car model variant*, *when I mostly drive*, *in weather condition*, *weather and I am driving*. The visible sentence carries the same meaning visually. |
+| **3.3.2** | Labels or Instructions | A | Yes | ✅ Pass | Each control has a real visible label — "Model:"+family, "Road type", "Weather", "Occupancy" — sitting inside its own floating-label box, not just implied by the surrounding sentence. |
 | **3.3.3** | Error Suggestion | AA | No | ⚪ N/A | No validated input, so no correction to suggest. |
 | **3.3.4** | Error Prevention (Legal, Financial, Data) | AA | No | ⚪ N/A | Nothing is submitted, purchased or legally committed; the app computes an estimate and stores nothing. |
 | **3.3.7** | Redundant Entry | A | No | ⚪ N/A | No multi-step process re-asks for information. |
@@ -171,7 +171,7 @@ Target **Level A + AA**, per EN 301 549 clause 9, hence BFSG / the European Acce
 | SC | Name | Lvl | Relevant | Status | Evidence / what to do |
 |---|---|---|---|---|---|
 | **4.1.1** | Parsing | A | Yes | ✅ Pass | Nu HTML validator **0 errors**. Obsolete in WCAG 2.2 but normative under EN 301 549 clause 9.4.1.1, so kept deliberately. |
-| **4.1.2** | Name, Role, Value | A | Yes | ✅ Pass | AX tree **81/62/0** default, **20/18/0** modal-open — 0 unnamed, **0 duplicate role+name**. Every `<select>` exposes role, name and value, and **the four names are stable — identical after changing all four values**, unlike the previous `aria-labelledby` scheme. `#nala-cta` is a real `<a href>` exposing **`role=link`**; `#nala-info-btn` has `aria-haspopup="dialog"`; `#nala-range-modal` is `role="dialog"` + `aria-modal="true"` + `aria-labelledby`. **No `aria-expanded` anywhere.** |
+| **4.1.2** | Name, Role, Value | A | Yes | ✅ Pass | 0 unnamed, **0 duplicate role+name**. Every `<select>` exposes role, name and value, and **the four names are stable — identical after changing all four values** (verified: `tests/invariants.spec.js` A3, resolving each `aria-labelledby` before and after changing every select). `#nala-cta` is a real `<a href>` exposing **`role=link`**; `#nala-info-btn` has `aria-haspopup="dialog"`; `#nala-range-modal` is `role="dialog"` + `aria-modal="true"` + `aria-labelledby`. **No `aria-expanded` anywhere.** |
 | **4.1.3** | Status Messages | AA | Yes | ✅ Pass | `#nala-live` (`aria-live="polite"`) announces the recomputed range without moving focus: 600 → 595 km, driven. Empty at rest, cleared after 3000ms. |
 
 ---
@@ -184,7 +184,7 @@ Target **Level A + AA**, per EN 301 549 clause 9, hence BFSG / the European Acce
 |---|---|---|
 | **1.4.11** Non-text Contrast | `<select>` border `rgb(161,164,172)` = **2.29:1** on cream, needs 3:1; nearest passing `#8b8e96` at 3.01:1. | **VW core component library.** Raise upstream; never patch locally. |
 
-**No open decisions.** SC 2.5.3 (Label in Name) is a plain pass — see the criteria table above.
+**No open decisions.** SC 2.5.3 (Label in Name) is a plain pass, closed by a real visible label, not an arguable reading — see the criteria table above.
 
 **Automated runs complete.** axe-core 4.13.0 at **96 rules** (all nine default-disabled
 force-enabled, including `target-size`): **0 violations** across 5 viewports × 2 states, 0 JS

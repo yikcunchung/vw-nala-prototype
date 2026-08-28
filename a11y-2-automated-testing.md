@@ -61,7 +61,7 @@ Criterion record: `a11y-1-criteria.md` — **56 criteria: 24 verified, 8 inspect
 ### NVDA vs VoiceOver — a deviation to record
 
 A **deviation**, not a substitution. The two disagree exactly where this app is interesting: a
-`<select>` named by a concise `aria-label` that echoes the visible prose around it, live-region politeness
+`<select>` named by `aria-labelledby` pointing at a real visible label, live-region politeness
 and timing, and whether a clipped `.sr-only` node is announced at all. NVDA is tested with Firefox or
 Chrome, VoiceOver with Safari, so the browser differs too. Budget an NVDA pass before sign-off.
 
@@ -276,8 +276,8 @@ Do Step 0, then — **writing down the spoken words after each action:**
 
 1. `VO+Right` from the top past the whole sentence; note what is said at each of the four dropdowns.
 2. `Tab` to each dropdown in turn; note the name **and** the value spoken.
-3. Note each utterance against the visible sentence — the SC 2.5.3 evidence. The old `#select-wea`
-   word-splice is gone; 2.5.3 applies equally to all four names.
+3. Note each utterance against the visible label box, not just the sentence — the SC 2.5.3
+   evidence. The name **is** the visible label now, for all four.
 4. `VO+Right` on into the dark result panel. **Note every string spoken, in order**, from "Estimated
    range" to the consumption line.
 5. Change any dropdown (`VO+Space`, arrow, `Return`); note what is announced, and how many times.
@@ -300,8 +300,9 @@ The hosted run is in §2 and is valid here — no lazy-build. The extension adds
    the three counts again.
 4. Note the `.sr-only` nodes. WAVE does not treat a 1×1 clip as hidden and may report contrast on
    `#nala-live` or on the `.sr-only` tail inside the "Learn more" link — a **known artifact**: both are
-   clipped, never rendered, and `#nala-live` is explicitly `color: #fff`. (The old `#select-veh-hint` /
-   `#select-wea-hint` spans are gone; the selects use a direct `aria-label`.)
+   clipped, never rendered, and `#nala-live` is explicitly `color: #fff`. (The selects now carry
+   real visible `.fl-label` boxes, referenced by `aria-labelledby` — nothing WAVE should flag as
+   an empty or missing form label.)
 
 > **Expect 1 alert, "Possible heading"** on the **result digits** — large bold standalone text, but a
 > calculated value that changes on every interaction. Not a defect; do not "fix" it into an `<h3>`.
@@ -341,15 +342,17 @@ reasoning lives there.
 
       | Control | Expected name | Expected value |
       |---|---|---|
-      | `#select-veh` | "of my car model variant" | "Pro Match 286 PS" |
-      | `#select-env` | "when I mostly drive" | "in the city" |
-      | `#select-wea` | "in weather condition" | "warm" |
-      | `#select-occ` | "weather and I am driving" | "alone" |
+      | `#select-veh` | "Model: ID.7" | "Pro Match 286 PS" |
+      | `#select-env` | "Road type" | "in the city" |
+      | `#select-wea` | "Weather" | "warm" |
+      | `#select-occ` | "Occupancy" | "alone" |
 
-- [ ] **Step 2 — name stability.** Change all four values, Tab back: **every name unchanged.**
-- [ ] **Step 3 — SC 2.5.3.** Each name should echo the visible words immediately around its control
-      (e.g. `#select-env`'s name is exactly *"when I mostly drive"*, matching what's on screen).
-      Confirm all four still do; see `a11y-1-criteria.md` for the pass rationale.
+- [ ] **Step 2 — name stability.** Change all four values, Tab back: **every name unchanged except
+      the family half of `#select-veh`'s** ("Model: ID.7" -> "Model: ID.4" if a second family is
+      ever added — "Model:" itself must never move).
+- [ ] **Step 3 — SC 2.5.3.** Each name **is** its visible label, not merely echoing nearby prose.
+      Confirm all four read the label box itself, not the surrounding sentence; see
+      `a11y-1-criteria.md` for the pass rationale.
 - [ ] **Step 3 — the link-out.** `#nala-cta` is an `<a href>`: announced as a **link**, name carrying
       destination and new-tab warning, opening `volkswagen.co.uk` in a new tab.
 - [ ] **Step 4** — expected order:

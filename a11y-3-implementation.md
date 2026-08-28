@@ -84,22 +84,26 @@ that is focusable.
 
 ---
 
-### A3 — A `<select>` carries a concise, STABLE `aria-label`
+### A3 — A `<select>` is named by `aria-labelledby`, split static from dynamic
 
-`SC 1.3.1, 4.1.2` · **Level A**
+`SC 1.3.1, 2.5.3, 4.1.2` · **Level A**
 
 ```html
-<select id="select-veh" aria-label="of my car model variant">…</select>
+<span id="select-veh-model-static">Model: </span><span id="select-veh-family">ID.7</span>
+<select id="select-veh" aria-labelledby="select-veh-model-static select-veh-family">…</select>
 ```
 
-**Do not build the name with `aria-labelledby` pointing at a span in the sentence.** This app shipped
-that scheme and it failed: JS rewrites one referenced span on every change, so the accessible name
-moved with the value (§7). Instead, each `aria-label` is a plain string aligned to read as a
-continuation of the visible words right before it — `#select-veh`'s name starts with *"of my"*,
-matching what's on screen.
+The name is a real, visible label, not a plain `aria-label` string. Where part of the label
+must change (the vehicle family), that part lives in its **own** span, separate from the
+static prefix — so the static half can never drift, however the dynamic half is written.
 
-This closes **SC 2.5.3** outright (`a11y-1`): the accessible name already contains the adjacent
-visible prose, so it passes whether or not an auditor treats that prose as the label.
+**A single element whose whole text JS rewrites is the trap, not `aria-labelledby` itself.**
+An earlier version pointed the name at one span containing the full string; JS overwrote
+that string wholesale on every change, so even the "Model:" prefix moved with the value.
+Splitting the static and dynamic halves into separate elements is the fix — not avoiding
+`aria-labelledby`, and not going back to a plain `aria-label`.
+
+This closes **SC 2.5.3** outright (`a11y-1`): the name **is** the visible label.
 
 **Trap:** `<option>` text is **not** the label. Comparing concatenated option text against the
 accessible name manufactures failures that do not exist.
@@ -480,25 +484,27 @@ range **of my [ID.7]** when I mostly drive **[motorway]** in **[cold]** weather 
 splice.**
 
 ```html
-<!-- ✓ concise, STABLE aria-label — a plain string, not built from the sentence's
-     live DOM: aligned to echo the visible words, but never wired to that span,
-     so it can't inherit the value-mutation the span itself is subject to. -->
-<span id="select-w1">of my</span>                          <!-- prose, matched by the name -->
+<!-- ✓ static prefix and dynamic value in SEPARATE spans, both referenced by
+     aria-labelledby. The static half can never drift because nothing ever
+     writes to it; only #select-veh-family is touched by JS. -->
+<span id="select-veh-model-static">Model: </span>
 <span id="select-veh-family" class="fl-label">ID.7</span>  <!-- the VALUE's family -->
-<select id="select-veh" aria-label="of my car model variant">…</select>
+<select id="select-veh" aria-labelledby="select-veh-model-static select-veh-family">…</select>
 
-<!-- ✗ aria-labelledby="select-w1 select-veh-family select-veh-hint" (ids since
-     deleted) yields "of my ID.7 variant" — the NAME MOVES WITH THE VALUE. -->
+<!-- ✗ one span holding the whole string, rewritten wholesale by JS on every
+     change — "Model: ID.7" -> "Model: ID.4" this way also moves the prefix,
+     because nothing protects it from the same textContent assignment. -->
 ```
 
-The four names are *of my car model variant*, *when I mostly drive*, *in weather condition* and
-*weather and I am driving* — each one a continuation of the visible prose immediately before it.
-This closes **SC 2.5.3** (`a11y-1-criteria.md`) rather than leaving it a judgement call.
+The four names are *Model: ID.7* (family updates, "Model:" never does), *Road type*, *Weather*
+and *Occupancy* — each a real, visible label, not a string built to merely echo nearby prose.
+This closes **SC 2.5.3** (`a11y-1-criteria.md`) outright, not as a judgement call.
 
 **Responsive names are a trap, though this one is gone.** A former `syncEnvLabel()` rewrote the
 environment select's `aria-label` when the visible copy changed at the 400px breakpoint: a name
 derived from responsive visible text must itself be responsive, or 2.5.3 breaks at one width only.
-Reintroduce visible-text-derived names and 2.5.3 needs verifying at every breakpoint.
+The current label ("Road type") is a fixed string, not derived from responsive text, so this
+trap does not apply to it — but reintroducing any visible-text-derived name reopens it.
 
 **`button#nala-info-btn` measures 23.797 × 24**, not 24×24 — the CSS declares `23.803px` and Blink's
 LayoutUnit snapping renders it as 23.797, so **both numbers are correct and neither is a typo.**
@@ -525,7 +531,7 @@ discovered.
 | **One car render, three variants** | `assets/` ships one image; `alt` describes only what is shown, so it stays accurate but cannot describe the selected variant. | Add one render per variant, assigning `src` and `alt` **together**. Never `alt` alone — the alternative would describe an image nobody is looking at (SC 1.1.1). |
 | **Dialog heading not announced** | Focus lands on the body copy, so a reader speaks the paragraph but not the `h2`. | **Leave it.** Focusing the container announces the heading and skips the paragraph — the defect the sibling Visualizer shipped. `aria-describedby` was rejected: the paragraph is 945 characters and long descriptions get truncated by some readers. If revisited, A/B by ear. |
 
-**Not open, and not to be reopened:** the concise `aria-label` naming scheme (A3), the empty-at-rest
-live region (A6), `inert` on the background while the dialog is open (B6), and the `::before`
-hit-area expansion on the info button (C1). Each replaced something that measurably failed; the
+**Not open, and not to be reopened:** the split static/dynamic `aria-labelledby` naming scheme (A3),
+the empty-at-rest live region (A6), `inert` on the background while the dialog is open (B6), and
+the `::before` hit-area expansion on the info button (C1). Each replaced something that measurably failed; the
 reasoning sits next to each rule so it is not undone by someone tidying up.

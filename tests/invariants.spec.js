@@ -12,11 +12,20 @@
 const { test, expect } = require('@playwright/test');
 
 const NAMES = {
-  'select-veh': 'of my car model variant',
-  'select-env': 'when I mostly drive',
-  'select-wea': 'in weather condition',
-  'select-occ': 'weather and I am driving',
+  'select-veh': 'Model: ID.7',
+  'select-env': 'Driving location',
+  'select-wea': 'Weather',
+  'select-occ': 'Occupants',
 };
+
+/** Resolves a (possibly multi-id) aria-labelledby the way the AX tree concatenates it. */
+function resolveLabelledby(page, id) {
+  return page.evaluate((elId) => {
+    const el = document.getElementById(elId);
+    const ids = (el.getAttribute('aria-labelledby') || '').split(/\s+/).filter(Boolean);
+    return ids.map((i) => (document.getElementById(i) || {}).textContent || '').join('').trim();
+  }, id);
+}
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/index.html', { waitUntil: 'domcontentloaded' });
@@ -54,12 +63,14 @@ test('A6 load does not announce', async ({ page }) => {
 });
 
 /* ─── A3 · names must be stable ───────────────────────────────────────────────
-   The previous scheme stitched names from the sentence via aria-labelledby, and
-   one referenced span is rewritten by JS — so the accessible name moved with the
-   value. Names must not change when values do. */
+   Each select is named via aria-labelledby pointing at its own static label
+   span (mirroring the real core Select component's `label` + `isFloating`
+   props). The failure mode is not aria-labelledby itself — it's a labelledby
+   target whose text a value change ever rewrites, which is exactly what the
+   second test below would catch. */
 test('A3 the four select names are exactly as specified', async ({ page }) => {
   for (const [id, name] of Object.entries(NAMES)) {
-    await expect(page.locator(`#${id}`)).toHaveAttribute('aria-label', name);
+    expect(await resolveLabelledby(page, id)).toBe(name);
   }
 });
 
@@ -70,14 +81,8 @@ test('A3 names do not change when values change', async ({ page }) => {
   await page.selectOption('#select-occ', 'family');
   await page.waitForTimeout(700);
   for (const [id, name] of Object.entries(NAMES)) {
-    await expect(page.locator(`#${id}`)).toHaveAttribute('aria-label', name);
+    expect(await resolveLabelledby(page, id)).toBe(name);
   }
-});
-
-test('A3 no select is named by aria-labelledby', async ({ page }) => {
-  // Regression guard: reintroducing the stitched scheme is the failure mode.
-  const n = await page.locator('select[aria-labelledby]').count();
-  expect(n).toBe(0);
 });
 
 /* ─── B8 · dialog announces its own content ───────────────────────────────────

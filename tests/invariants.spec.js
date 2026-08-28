@@ -13,9 +13,9 @@ const { test, expect } = require('@playwright/test');
 
 const NAMES = {
   'select-veh': 'Model: ID.7',
-  'select-env': 'Driving location',
+  'select-env': 'Road type',
   'select-wea': 'Weather',
-  'select-occ': 'Occupants',
+  'select-occ': 'Occupancy',
 };
 
 /** Resolves a (possibly multi-id) aria-labelledby the way the AX tree concatenates it. */

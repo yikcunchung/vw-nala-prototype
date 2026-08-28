@@ -14,13 +14,15 @@ You need **six things**. Everything else in this repo is evidence for auditors.
 ### 1. Name each dropdown with a plain `aria-label`
 
 ```html
-<select aria-label="my car model variant">…</select>
+<select aria-label="of my car model variant">…</select>
 ```
 
-The four names are `my car model variant`, `driving location`, `weather condition`,
-`travelling`. **Do not build the name out of the sentence around it.** We tried; a
-`<span>` in that sentence gets rewritten by JS, so the name changed every time the
-value changed.
+The four names are `of my car model variant`, `when I mostly drive`, `in weather
+condition`, `weather and I am driving` — each aligned to read naturally with the
+visible sentence words immediately before and after it. **Do not point the name at
+the sentence via `aria-labelledby`.** We tried; the floating label beside the vehicle
+select (`#select-veh-family`) is rewritten by JS on every change, so a name built from
+it changed every time the value changed.
 
 ### 2. Do not hide the result number
 

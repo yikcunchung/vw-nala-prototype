@@ -32,8 +32,8 @@ on which build. §10 is the **claim**, and the three reasons it stops short of "
 A **standalone page**, so `axe.run(document)` covers the whole conformance surface; no
 component-versus-page split. Local `index.html` and the deployed build are **byte-identical**.
 
-Criterion record: `a11y-1-criteria.md` — **56 criteria: 23 verified, 8 inspected, 23 not applicable,
-1 decision to record, 1 inherited failure.**
+Criterion record: `a11y-1-criteria.md` — **56 criteria: 24 verified, 8 inspected, 23 not applicable,
+1 inherited failure.**
 
 ---
 
@@ -61,7 +61,7 @@ Criterion record: `a11y-1-criteria.md` — **56 criteria: 23 verified, 8 inspect
 ### NVDA vs VoiceOver — a deviation to record
 
 A **deviation**, not a substitution. The two disagree exactly where this app is interesting: a
-`<select>` named by a concise `aria-label` that does not echo the visible prose, live-region politeness
+`<select>` named by a concise `aria-label` that echoes the visible prose around it, live-region politeness
 and timing, and whether a clipped `.sr-only` node is announced at all. NVDA is tested with Firefox or
 Chrome, VoiceOver with Safari, so the browser differs too. Budget an NVDA pass before sign-off.
 
@@ -341,15 +341,15 @@ reasoning lives there.
 
       | Control | Expected name | Expected value |
       |---|---|---|
-      | `#select-veh` | "my car model variant" | "Pro Match 286 PS" |
-      | `#select-env` | "driving location" | "in the city" |
-      | `#select-wea` | "weather condition" | "warm" |
-      | `#select-occ` | "travelling" | "alone" |
+      | `#select-veh` | "of my car model variant" | "Pro Match 286 PS" |
+      | `#select-env` | "when I mostly drive" | "in the city" |
+      | `#select-wea` | "in weather condition" | "warm" |
+      | `#select-occ` | "weather and I am driving" | "alone" |
 
 - [ ] **Step 2 — name stability.** Change all four values, Tab back: **every name unchanged.**
-- [ ] **Step 3 — the SC 2.5.3 judgement call.** The names deliberately do **not** echo the visible
-      prose; record whether a speech-input user reading that sentence would plausibly say the name.
-      Evidence for the 2.5.3 decision in `a11y-1-criteria.md` (the prose is *context*, not a label).
+- [ ] **Step 3 — SC 2.5.3.** Each name should echo the visible words immediately around its control
+      (e.g. `#select-env`'s name is exactly *"when I mostly drive"*, matching what's on screen).
+      Confirm all four still do; see `a11y-1-criteria.md` for the pass rationale.
 - [ ] **Step 3 — the link-out.** `#nala-cta` is an `<a href>`: announced as a **link**, name carrying
       destination and new-tab warning, opening `volkswagen.co.uk` in a new tab.
 - [ ] **Step 4** — expected order:
@@ -616,8 +616,7 @@ naming NVDA will not accept VoiceOver evidence for that line item. §1 has the r
 2. **Only one screen reader has been run** — VoiceOver on Safari, §9.1, where the protocol names
    **NVDA**. It was paraphrase, not a captured transcript, and mixed local with live, which produced
    one false finding (retracted, §9.1 row 13).
-3. **The recorded decisions rest on readings an auditor may reject** — SC 2.5.3 on all four select
-   names, and the 2.4.4 link text.
+3. **One recorded decision rests on a reading an auditor may reject** — the 2.4.4 link text.
 
 **Tool-clean is not compliant:** the one defect that shipped here (`aria-hidden` on the result value,
 §9.1 row 6) was passed by axe at 96 rules, WAVE and Nu alike.

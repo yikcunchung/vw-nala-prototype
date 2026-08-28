@@ -25,7 +25,7 @@ Target **Level A + AA**, per EN 301 549 clause 9, hence BFSG / the European Acce
 
 **56 criteria assessed. 1 inherited failure, 0 failures owned by this app, 0 open criteria.**
 (NVDA is an outstanding *run*, not an open criterion — see the end of this document.)
-23 verified · 8 inspected · 23 not applicable · 1 decision to record · 1 inherited failure.
+24 verified · 8 inspected · 23 not applicable · 1 inherited failure.
 
 ---
 
@@ -123,7 +123,7 @@ Target **Level A + AA**, per EN 301 549 clause 9, hence BFSG / the European Acce
 |---|---|---|---|---|---|
 | **2.5.1** | Pointer Gestures | A | Yes | ✅ Pass* | No path-based or multipoint gesture; every control is a single tap or click. |
 | **2.5.2** | Pointer Cancellation | A | Yes | ✅ Pass* | Activation is on the up-event — native `<button>` and `<select>`, no `mousedown` handlers. |
-| **2.5.3** | Label in Name | A | Yes | ⚖️ Decide | **Decide, on all four select names.** Each `aria-label` deliberately does *not* echo the visible sentence prose. **The reading:** the words around each dropdown (*"of my"*, *"in"*, *"weather and I am driving"*) are running prose and the on-control text is the *value*, so no select has a visible *label* — as settled for the Visualizer's `#select-model-lg`. **The counter-reading:** in a talking-sentence UI the prose *is* the label, and all four fail. The old scheme is no answer: it made `#select-veh`'s name **mutate with its value** (JS rewrote the `ID.7` token feeding it) and named the occupancy select *"weather and I am driving"*, never mentioning people. |
+| **2.5.3** | Label in Name | A | Yes | ✅ Pass | Each `aria-label` now echoes the visible sentence words immediately around it: `#select-veh` opens with *"of my"*, `#select-env` is exactly *"when I mostly drive"*, `#select-wea` opens with *"in"*, `#select-occ` is exactly *"weather and I am driving"*. This passes whether or not an auditor treats the surrounding prose as a label — the accessible name already contains it. **Do not build this via `aria-labelledby` pointing at a span** — that was tried, and made `#select-veh`'s name mutate with its value (the `ID.7` token). |
 | **2.5.4** | Motion Actuation | A | No | ⚪ N/A | No device- or user-motion actuation. |
 | **2.5.7** | Dragging Movements | AA | No | ⚪ N/A | No dragging — no slider, no drag handle. |
 | **2.5.8** | Target Size (Minimum) | AA | Yes | ✅ Pass | Nothing under 24×24. The smallest, `button#nala-info-btn`, is a **23.797 × 24** border box with a real target of **~36.0 × 36.0** via a transparent `::before` — ray-cast with `elementFromPoint`, all four corners at ±12 return the button. Nearest other target **86.8px**; modal close **32 × 32**. axe `target-size`: **7 pass / 0 violations** default, **1 pass / 0 violations** modal-open — 1 because `inert` removes every background target. |
@@ -156,7 +156,7 @@ Target **Level A + AA**, per EN 301 549 clause 9, hence BFSG / the European Acce
 | SC | Name | Lvl | Relevant | Status | Evidence / what to do |
 |---|---|---|---|---|---|
 | **3.3.1** | Error Identification | A | No | ⚪ N/A | No input can be in error: every control is a closed `<select>` with valid options. |
-| **3.3.2** | Labels or Instructions | A | Yes | ✅ Pass | Each control has a concise `aria-label` — *my car model variant*, *driving location*, *weather condition*, *travelling*. The visible sentence carries the same meaning visually. |
+| **3.3.2** | Labels or Instructions | A | Yes | ✅ Pass | Each control has a concise `aria-label` — *of my car model variant*, *when I mostly drive*, *in weather condition*, *weather and I am driving*. The visible sentence carries the same meaning visually. |
 | **3.3.3** | Error Suggestion | AA | No | ⚪ N/A | No validated input, so no correction to suggest. |
 | **3.3.4** | Error Prevention (Legal, Financial, Data) | AA | No | ⚪ N/A | Nothing is submitted, purchased or legally committed; the app computes an estimate and stores nothing. |
 | **3.3.7** | Redundant Entry | A | No | ⚪ N/A | No multi-step process re-asks for information. |
@@ -184,11 +184,7 @@ Target **Level A + AA**, per EN 301 549 clause 9, hence BFSG / the European Acce
 |---|---|---|
 | **1.4.11** Non-text Contrast | `<select>` border `rgb(161,164,172)` = **2.29:1** on cream, needs 3:1; nearest passing `#8b8e96` at 3.01:1. | **VW core component library.** Raise upstream; never patch locally. |
 
-**One decision to record** — it passes, it needs a position, not code:
-
-| SC | Decision |
-|---|---|
-| **2.5.3** Label in Name | Passes on the reading that the sentence prose is *context*, not a **label**; read the other way, all four fail. **Record the position; never re-stitch the names out of the visible words** — that made `#select-veh`'s name mutate with its value. |
+**No open decisions.** SC 2.5.3 (Label in Name) is a plain pass — see the criteria table above.
 
 **Automated runs complete.** axe-core 4.13.0 at **96 rules** (all nine default-disabled
 force-enabled, including `target-size`): **0 violations** across 5 viewports × 2 states, 0 JS
@@ -214,8 +210,8 @@ evidenced.** NVDA is the only outstanding run.
 > *"This app meets WCAG 2.2 A/AA on **every check the protocol names except NVDA** — axe over CDP at
 > 96 rules and via the DevTools UI at 2.2 AA, WAVE hosted and by extension in both states, the
 > accessibility tree, real key events, literal 400% zoom, and a **VoiceOver pass on Safari**, all
-> against live — with **one non-text-contrast failure inherited from the core component library**,
-> **one decision recorded (SC 2.5.3)** and **two run-level trade-offs** in `a11y-2` §9.1."*
+> against live — with **one non-text-contrast failure inherited from the core component library**
+> and **two run-level trade-offs** in `a11y-2` §9.1."*
 
 Not "fully compliant": **SC 1.4.11 genuinely fails**, and **NVDA has never run**. Being a core
 design-system value changes *who fixes* 1.4.11, not *whether it fails*.

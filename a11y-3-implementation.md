@@ -89,17 +89,17 @@ that is focusable.
 `SC 1.3.1, 4.1.2` · **Level A**
 
 ```html
-<select id="select-veh" aria-label="my car model variant">…</select>
+<select id="select-veh" aria-label="of my car model variant">…</select>
 ```
 
-**Do not stitch the name out of the surrounding sentence with `aria-labelledby`.** This app shipped
+**Do not build the name with `aria-labelledby` pointing at a span in the sentence.** This app shipped
 that scheme and it failed: JS rewrites one referenced span on every change, so the accessible name
-moved with the value (§7). This is the exception, not new general advice — in a talking-sentence UI
-the prose is not a label and the on-control text is the value. Where a control does have a real
-visible label, prefer `aria-labelledby` pointing at it.
+moved with the value (§7). Instead, each `aria-label` is a plain string aligned to read as a
+continuation of the visible words right before it — `#select-veh`'s name starts with *"of my"*,
+matching what's on screen.
 
-The cost is a recorded **SC 2.5.3** decision: the names deliberately do not echo the visible prose,
-so an auditor reading that prose as the label would fail all four (`a11y-1`).
+This closes **SC 2.5.3** outright (`a11y-1`): the accessible name already contains the adjacent
+visible prose, so it passes whether or not an auditor treats that prose as the label.
 
 **Trap:** `<option>` text is **not** the label. Comparing concatenated option text against the
 accessible name manufactures failures that do not exist.
@@ -480,18 +480,20 @@ range **of my [ID.7]** when I mostly drive **[motorway]** in **[cold]** weather 
 splice.**
 
 ```html
-<!-- ✓ concise, STABLE aria-label — not stitched from the visible sentence:
-     JS rewrites the ID.7 token, so a stitched name moves with the value. -->
-<span id="select-w1">of my</span>                          <!-- prose, not a label -->
+<!-- ✓ concise, STABLE aria-label — a plain string, not built from the sentence's
+     live DOM: aligned to echo the visible words, but never wired to that span,
+     so it can't inherit the value-mutation the span itself is subject to. -->
+<span id="select-w1">of my</span>                          <!-- prose, matched by the name -->
 <span id="select-veh-family" class="fl-label">ID.7</span>  <!-- the VALUE's family -->
-<select id="select-veh" aria-label="my car model variant">…</select>
+<select id="select-veh" aria-label="of my car model variant">…</select>
 
 <!-- ✗ aria-labelledby="select-w1 select-veh-family select-veh-hint" (ids since
      deleted) yields "of my ID.7 variant" — the NAME MOVES WITH THE VALUE. -->
 ```
 
-The four names are *my car model variant*, *driving location*, *weather condition* and *travelling*:
-purpose, not prose. A **recorded 2.5.3 decision** (`a11y-1-criteria.md`), not a free win.
+The four names are *of my car model variant*, *when I mostly drive*, *in weather condition* and
+*weather and I am driving* — each one a continuation of the visible prose immediately before it.
+This closes **SC 2.5.3** (`a11y-1-criteria.md`) rather than leaving it a judgement call.
 
 **Responsive names are a trap, though this one is gone.** A former `syncEnvLabel()` rewrote the
 environment select's `aria-label` when the visible copy changed at the 400px breakpoint: a name
@@ -514,7 +516,7 @@ control — correct per 2.5.3, confusing to hear.
 
 # 8. What is still open
 
-Four items a port inherits. None is a blocker; all are to be decided deliberately rather than
+Three items a port inherits. None is a blocker; all are to be decided deliberately rather than
 discovered.
 
 | Item | State | What to do |
@@ -522,7 +524,6 @@ discovered.
 | **Select border contrast** | **SC 1.4.11 fails.** `rgb(161,164,172)` on the cream page is **2.29:1**; needs 3:1. | **Upstream** — a core component value, not a prototype choice, so never darken it locally. `#8b8e96` is the nearest passing shade at 3.01:1. |
 | **One car render, three variants** | `assets/` ships one image; `alt` describes only what is shown, so it stays accurate but cannot describe the selected variant. | Add one render per variant, assigning `src` and `alt` **together**. Never `alt` alone — the alternative would describe an image nobody is looking at (SC 1.1.1). |
 | **Dialog heading not announced** | Focus lands on the body copy, so a reader speaks the paragraph but not the `h2`. | **Leave it.** Focusing the container announces the heading and skips the paragraph — the defect the sibling Visualizer shipped. `aria-describedby` was rejected: the paragraph is 945 characters and long descriptions get truncated by some readers. If revisited, A/B by ear. |
-| **SC 2.5.3 on all four select names** | Passes on the reading that the prose is *context* and the on-control text is the *value*, so no select has a visible **label**. | A recorded decision, not a pass by default. An auditor reading the prose as the label would fail all four; the only clean close is a **design** change, a visible label per control. |
 
 **Not open, and not to be reopened:** the concise `aria-label` naming scheme (A3), the empty-at-rest
 live region (A6), `inert` on the background while the dialog is open (B6), and the `::before`

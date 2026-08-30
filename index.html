@@ -213,15 +213,16 @@ body {
    Only change: the chevron is inset 16px (Figma pads the select 16 and puts a
    24px gap before the 32px chevron box) instead of the simulator's 8px, so the
    control hugs to the exact Figma widths (209 / 156 / 128 / 126 px). ── */
-/* max-width is a safety clamp for SC 1.4.10 / 1.4.12, not a layout change: today the
-   widest select measures 265.8px against 266.667px of content box at 320 CSS px
-   (100vw - 2 x 100vw/12), which is 0.87px of slack. .fl-sizer is white-space:nowrap,
-   so its intrinsic width dictates the control width, and any classic (non-overlay)
-   scrollbar or a fallback-font metric would tip that into horizontal overflow. With
-   the clamp the control shrinks instead and the native select ellipsises - degraded,
-   but not a 1.4.10 failure. No effect at any width where it already fits. */
-.fl-select { position: relative; overflow: visible; display: inline-block; vertical-align: middle; max-width: 240px; }
-.fl-sizer { max-width: 240px; }
+/* max-width removed on request (2026-08-30): it was calibrated against short
+   placeholder text (265.8px vs a 266.667px budget at 320 CSS px) and real
+   production option strings measured far longer (376px for one real example)
+   — the 240px figure was already stale. Removing it re-opens the SC 1.4.10
+   page-level horizontal-scroll risk that comment was written to prevent;
+   .fl-sizer is white-space:nowrap, so its intrinsic content width now drives
+   the control's rendered width with nothing capping it. Verify against real
+   (not placeholder) content before treating this as settled either way. */
+.fl-select { position: relative; overflow: visible; display: inline-block; vertical-align: middle; }
+.fl-sizer {}
 
 .fl-select select {
   position: absolute; inset: 0;

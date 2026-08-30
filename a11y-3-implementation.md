@@ -415,6 +415,16 @@ keyboard-operable region is the permitted two-dimensional exception; page-level 
 not. Sufficient techniques: **C31** (flexbox), **C32** (media queries + grid), **C34** (un-fix
 sticky).
 
+> **A control whose width is driven by its own content's intrinsic size (e.g. a hidden
+> `white-space:nowrap` "sizer" element sized to the longest expected string) needs a cap calibrated
+> against real content, not placeholder text.** `#select-veh`'s width was driven this way with a
+> `max-width` safety clamp; removed 2026-08-30 on request after the clamp's own figure (240px) was
+> found to be calibrated against short placeholder option text. Verified: today's placeholder
+> content still fits without it, but one real production option string measured 376px against a
+> 266.667px budget at 320 CSS px — a confirmed page-level overflow once real content lands, with
+> nothing left to prevent it. Re-introduce a cap (sized against real content) before that content
+> ships, or accept the overflow risk as a known, open item.
+
 ---
 
 ### D4 — The text-spacing overrides must not clip anything

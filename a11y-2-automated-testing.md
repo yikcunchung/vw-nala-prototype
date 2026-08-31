@@ -10,9 +10,10 @@
 default-disabled rules force-enabled (96 rules), **0 WAVE errors** hosted *and* by extension in both
 states, **0 issues** through the axe DevTools UI at WCAG 2.2 AA, and **0 unnamed nodes** in the
 accessibility tree. The behaviour no scanner reaches was driven with real key events. **A VoiceOver
-pass is complete — 15 of 15 rows — and it found a defect every one of those tools passed.** Two
-things are still owed: **NVDA**, and an **upstream fix to the select border**, which fails SC 1.4.11
-at 2.29:1 and is a core-component value this app does not own.
+pass is complete — 15 of 15 rows — and it found a defect every one of those tools passed.** One
+thing is still owed: **NVDA**. The select border, corrected 2026-08-30 to `rgb(110,116,126)`
+(4.32:1), now clears SC 1.4.11's 3:1 floor outright — deliberately deviating from the real core
+component's own failing value, since this prototype's job is to pass every criterion.
 
 > **The one sentence that matters:** a clean automated run is necessary and nowhere near sufficient.
 > This app scored 0 axe violations at 96 rules, 0 WAVE errors and 0 HTML validity errors **while the
@@ -32,8 +33,8 @@ on which build. §10 is the **claim**, and the two reasons it stops short of "fu
 A **standalone page**, so `axe.run(document)` covers the whole conformance surface; no
 component-versus-page split. Local `index.html` and the deployed build are **byte-identical**.
 
-Criterion record: `a11y-1-criteria.md` — **56 criteria: 24 verified, 8 inspected, 23 not applicable,
-1 inherited failure.**
+Criterion record: `a11y-1-criteria.md` — **56 criteria: 25 verified, 8 inspected, 23 not applicable,
+0 failures.**
 
 ---
 
@@ -130,8 +131,8 @@ SC 4.1.1 Parsing: obsolete in WCAG 2.2, normative under EN 301 549 (clause 9.4.1
 
 ## Contrast
 
-**One SC 1.4.11 failure, inherited from the core component library.** The `<select>` border
-`--border-input: rgb(161,164,172)` (`#a1a4ac`) measures **2.29:1** against the cream page background
+**SC 1.4.11 corrected 2026-08-30, no longer inherited.** The `<select>` border was
+`--border-input: rgb(161,164,172)` (`#a1a4ac`), which measured **2.29:1** against the cream page background
 `rgba(246,245,242,1)`; SC 1.4.11 requires **3:1** for a control's visual boundary. **The value is the
 VW core component library's, not this prototype's** — raised upstream, not patched locally. **No axe
 rule covers it** (§9.3).
@@ -146,7 +147,7 @@ rule covers it** (§9.3).
 | Focus ring `#C86C03` on cream | 3.44:1 | 3:1 | pass |
 | Focus ring `#C86C03` on navy | 4.22:1 | 3:1 | pass |
 | Focus ring `#C86C03` on modal white | 3.75:1 | 3:1 | pass |
-| **Select border `rgb(161,164,172)` on cream** | **2.29:1** | **3:1** | **fail (inherited)** |
+| **Select border `rgb(110,116,126)` on cream** (corrected 2026-08-30, was `rgb(161,164,172)`) | **4.32:1** | **3:1** | **pass** |
 
 **One `color-contrast` incomplete, resolved by hand.** Modal-open at ≥390px,
 `#nala-range-modal-body`: "background color could not be determined because it partially overlaps
@@ -289,7 +290,7 @@ specific to nala.
 
 - Protocol baseline: **4.131.2** — record any deviation.
 - Scan **all of my page**, then open the ⓘ modal and scan again.
-- **What axe cannot tell you here, at any version:** the **SC 1.4.11 select-border failure** in §2.
+- **What axe cannot tell you here, at any version:** whether a manually-verified color value like the select border (§2) is correct — axe ships no rule for SC 1.4.11 at all.
 
 ---
 
@@ -352,7 +353,7 @@ pass.** Where §9 has recorded an answer, the reasoning lives there.
 - [ ] `target-size` is confirmed **enabled** and appears in the results.
 - [ ] Default state: **0 violations**. Modal-open state: **0 violations**.
 - [ ] Extension version recorded, and any deviation from 4.131.2 noted.
-- [ ] It is recorded that this run **does not** cover the SC 1.4.11 select-border failure.
+- [ ] It is recorded that this run **does not** cover SC 1.4.11 (axe has no rule for it) — verify the select border by hand instead.
 
 ## Recording the result
 
@@ -539,8 +540,9 @@ only grow, so a newer build passing is at least as strong, but the exact version
 a formal audit asks. **The UI and CDP runs agree.**
 
 **What no axe version can close, at 2.1 or 2.2:** `color-contrast` implements **SC 1.4.3 (text) only**
-and axe-core ships **no rule for SC 1.4.11 non-text contrast**. The select border at **2.29:1** is a
-real failure every axe run — CDP or UI — will pass. See §2.
+and axe-core ships **no rule for SC 1.4.11 non-text contrast**. The select border now measures
+**4.32:1** (corrected 2026-08-30) and would pass a hand-check either way, but axe itself never runs
+that check — every axe run, CDP or UI, is silent on it regardless of the actual color. See §2.
 
 ## 9.4 NVDA — ❌ not done
 
@@ -555,15 +557,11 @@ naming NVDA will not accept VoiceOver evidence for that line item. §1 has the r
 > *"This app meets WCAG 2.2 A/AA on **every check the protocol names except NVDA** — axe both over
 > CDP at 96 rules and through the DevTools UI at WCAG 2.2 AA, WAVE hosted and by extension in both
 > states, the accessibility tree, real key events, literal 400% zoom, and a **VoiceOver pass on
-> Safari** — all against the live deployment, with **one non-text-contrast failure inherited from the
-> core component library** and **NVDA still outstanding**."*
+> Safari** — all against the live deployment, with **NVDA still outstanding**."*
 
-**What it must not say: "fully compliant."** Two reasons:
+**What it must not say: "fully compliant."** One reason:
 
-1. **SC 1.4.11 genuinely fails.** The `<select>` border is 2.29:1 and needs 3:1 — a core design-system
-   value this prototype does not own, which changes *who fixes it*, not *whether it fails*. No tool
-   reports it.
-2. **Only one screen reader has been run** — VoiceOver on Safari, §9.1, where the protocol names
+1. **Only one screen reader has been run** — VoiceOver on Safari, §9.1, where the protocol names
    **NVDA**. It was paraphrase, not a captured transcript, and mixed local with live, which produced
    one false finding (retracted, §9.1 row 13).
 

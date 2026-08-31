@@ -537,7 +537,7 @@ discovered.
 
 | Item | State | What to do |
 |---|---|---|
-| **Select border contrast** | **SC 1.4.11 fails.** `rgb(161,164,172)` on the cream page is **2.29:1**; needs 3:1. | **Upstream** — a core component value, not a prototype choice, so never darken it locally. `#8b8e96` is the nearest passing shade at 3.01:1. |
+| **Select border contrast** | **SC 1.4.11 passes.** Corrected 2026-08-30 to `rgb(110,116,126)` (4.32:1 on the cream page), from the real core component's failing `rgb(161,164,172)` (2.29:1). | **Deliberate deviation from core** — this prototype's purpose is to pass every criterion outright, not replicate an upstream contrast failure. |
 | **One car render, three variants** | `assets/` ships one image; `alt` describes only what is shown, so it stays accurate but cannot describe the selected variant. | Add one render per variant, assigning `src` and `alt` **together**. Never `alt` alone — the alternative would describe an image nobody is looking at (SC 1.1.1). |
 | **Dialog heading not announced** | Focus lands on the body copy, so a reader speaks the paragraph but not the `h2`. | **Leave it.** Focusing the container announces the heading and skips the paragraph — the defect the sibling Visualizer shipped. `aria-describedby` was rejected: the paragraph is 945 characters and long descriptions get truncated by some readers. If revisited, A/B by ear. |
 

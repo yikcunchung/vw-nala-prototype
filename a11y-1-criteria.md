@@ -23,9 +23,11 @@ Target **Level A + AA**, per EN 301 549 clause 9, hence BFSG / the European Acce
 | ⚖️ Decide | Passes, but on an arguable reading — record the decision |
 | ❌ Inherited | Fails, and the cause is a **core design-system value** this app does not own |
 
-**56 criteria assessed. 1 inherited failure, 0 failures owned by this app, 0 open criteria.**
+**56 criteria assessed. 0 failures, 0 open criteria.**
 (NVDA is an outstanding *run*, not an open criterion — see the end of this document.)
-24 verified · 8 inspected · 23 not applicable · 1 inherited failure.
+25 verified · 8 inspected · 23 not applicable · 0 failures.
+(SC 1.4.11 was corrected 2026-08-30 from an inherited-failure state to a plain pass — moved from
+"inherited" to "verified.")
 
 ---
 
@@ -71,7 +73,7 @@ Target **Level A + AA**, per EN 301 549 clause 9, hence BFSG / the European Acce
 | **1.4.4** | Resize Text | AA | Yes | ✅ Pass | 400% zoom (320×256 @ dsf 4): 0 violations both states, no horizontal scroll, nothing clipped, all controls reachable. |
 | **1.4.5** | Images of Text | AA | Yes | ✅ Pass* | No images of text. All text is live text. |
 | **1.4.10** | Reflow | AA | Yes | ✅ Pass | At 320×256 @ dsf 4: `scrollWidth 320 == clientWidth 320`, **zero elements overflow the right edge**, both states; vertical scroll only. `width: 91.66vw` / `max-height: calc(100% - 24px)` / `overflow-y: auto` keeps long modal copy scrolling inside. **Open risk, not yet re-closed:** `.fl-select`/`.fl-sizer`'s `max-width:240px` safety clamp was removed on request (2026-08-30) — it existed specifically to cap the vehicle select's width regardless of option text length (`.fl-sizer` is `white-space:nowrap`, so its content's intrinsic width now drives the control's rendered width with nothing capping it). Current placeholder content ("Model: ID.7" / "GTX 4MOTION 340 PS") still measures well within budget, so this pass holds **for today's content**. Verified with one real production option string ("Pro mit Infotainment-Paket 220 kW (299 PS) / 77 kW·h"): 376px needed against a 266.667px budget at 320 CSS px — a confirmed 170px page-level horizontal overflow once that lands. Re-test this row against real content before shipping, not just the placeholder. |
-| **1.4.11** | Non-text Contrast | AA | Yes | ❌ **Inherited** | **The `<select>` border fails:** `--border-input: rgb(161,164,172)` (`#a1a4ac`) on cream `rgba(246,245,242,1)` is **2.29:1**, needs 3:1. **A VW core component library value, not owned here** — raise upstream, never patch locally. Nearest passing `#8b8e96` at **3.01:1**. Focus ring `#C86C03` passes: **3.44:1** cream, **4.22:1** navy, **3.75:1** modal white. Chevron `#293043` **12.05:1** on cream keeps the control identifiable but is no substitute for a 3:1 boundary. |
+| **1.4.11** | Non-text Contrast | AA | Yes | ✅ Pass | **Corrected 2026-08-30:** `--border-input` is now `rgb(110,116,126)` (4.32:1 on cream `rgba(246,245,242,1)`), clearing 3:1 outright — no exception needed. This deliberately deviates from the real production core Select component (which uses the failing `rgb(161,164,172)`, 2.29:1, verified by pixel-sampling a live screenshot): **this prototype's purpose is to demonstrate a build that passes every criterion outright, regardless of whether the upstream core component itself does.** Focus ring `#C86C03` passes: **3.44:1** cream, **4.22:1** navy, **3.75:1** modal white. |
 | **1.4.12** | Text Spacing | AA | Yes | ✅ Pass | Four overrides (line-height 1.5, letter-spacing .12em, word-spacing .16em, paragraph 2em) at 1440 / 390 / 320: **nothing clipped, no control lost, no horizontal scroll.** Detector validated on a canary that fits at default line-height and overflows at 1.5. |
 | **1.4.13** | Content on Hover or Focus | AA | No | ⚪ N/A | No hover- or focus-triggered overlay; the modal is **click/Enter/Space-triggered**. Dismissible anyway (Escape, backdrop click), persistent until dismissed. |
 
@@ -178,11 +180,10 @@ Target **Level A + AA**, per EN 301 549 clause 9, hence BFSG / the European Acce
 
 # What is actually left to do
 
-**One inherited failure, owned upstream:**
-
-| SC | Finding | Owner |
-|---|---|---|
-| **1.4.11** Non-text Contrast | `<select>` border `rgb(161,164,172)` = **2.29:1** on cream, needs 3:1; nearest passing `#8b8e96` at 3.01:1. | **VW core component library.** Raise upstream; never patch locally. |
+**No open failures.** SC 1.4.11's `<select>` border was corrected 2026-08-30 from the real core
+component's failing `rgb(161,164,172)` (2.29:1) to `rgb(110,116,126)` (4.32:1) — this prototype's
+purpose is to demonstrate a build that passes every criterion outright, not replicate an upstream
+component's own contrast failure. See the SC 1.4.11 row above.
 
 **No open decisions.** SC 2.5.3 (Label in Name) is a plain pass, closed by a real visible label, not an arguable reading. SC 2.4.4 (Link Purpose in Context) is likewise a plain pass, not a judgement call: its "Learn more" sr-only tail is W3C's own named sufficient technique C7, not a workaround an auditor could reasonably reject — see the criteria table above.
 
@@ -210,11 +211,11 @@ evidenced.** NVDA is the only outstanding run.
 > *"This app meets WCAG 2.2 A/AA on **every check the protocol names except NVDA** — axe over CDP at
 > 96 rules and via the DevTools UI at 2.2 AA, WAVE hosted and by extension in both states, the
 > accessibility tree, real key events, literal 400% zoom, and a **VoiceOver pass on Safari**, all
-> against live — with **one non-text-contrast failure inherited from the core component library**
-> and **two run-level trade-offs** in `a11y-2` §9.1."*
+> against live — with **two run-level trade-offs** in `a11y-2` §9.1."*
 
-Not "fully compliant": **SC 1.4.11 genuinely fails**, and **NVDA has never run**. Being a core
-design-system value changes *who fixes* 1.4.11, not *whether it fails*.
+Not "fully compliant": **NVDA has never run**, and the SC 1.4.10 real-content overflow risk (above)
+is not yet re-closed. SC 1.4.11 previously failed via an inherited core component value; it's now a
+plain pass since the prototype deliberately deviates from that value.
 
 **VoiceOver is why the manual passes exist.** It found `#nala-value` carrying
 `aria-hidden="true"` — the headline number absent from the accessibility tree, only a clipped live

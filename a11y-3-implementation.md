@@ -26,26 +26,27 @@ not by scanning it: **axe at 96 rules, WAVE and Nu passed both.**
 
 | Rule | What went wrong | Cost if missed |
 |---|---|---|
-| **A6** | The visible result carried `aria-hidden="true"` — because it animates and must not be counted aloud — leaving a **1×1 clipped `aria-live` region as the only readable copy**. A live region's job is to interrupt on change, not to be browsed. | **The app's entire output was unreachable.** A screen-reader user could operate every control and never learn the answer. Found by ear; invisible to every tool in the required toolchain. |
-| **B8** | The "Learn more" CTA was a `<button>` with no handler: focusable, announced as a button, and doing nothing on activation. | An interaction dead end. Worse than the control not existing, because it advertises an affordance it does not have. |
+| **SC 4.1.3** | The visible result carried `aria-hidden="true"` — because it animates and must not be counted aloud — leaving a **1×1 clipped `aria-live` region as the only readable copy**. A live region's job is to interrupt on change, not to be browsed. | **The app's entire output was unreachable.** A screen-reader user could operate every control and never learn the answer. Found by ear; invisible to every tool in the required toolchain. |
+| **SC 4.1.2, 2.4.3** | The "Learn more" CTA was a `<button>` with no handler: focusable, announced as a button, and doing nothing on activation. | An interaction dead end. Worse than the control not existing, because it advertises an affordance it does not have. |
 
 Two process traps:
 
 - **An implicit group around the readout** made `VO+Right` announce only the two focusable children
-  and skip the label and the number; it needed `VO+Shift+Down`. Do not group a readout — see B7.
+  and skip the label and the number; it needed `VO+Shift+Down`. Do not group a readout — see
+  "A scrollable region is keyboard reachable" (SC 2.1.1) below.
 - **VoiceOver + Chrome skipped static text that Safari announced** — text present and unignored in
   *Chrome's own* accessibility tree. Test VoiceOver in **Safari**; Chrome is a second opinion only,
   and disagreements get recorded rather than treated as ground truth.
 
 **This app shipped 0 unnamed graphics** — range-simulator exposed **16**, cost-simulator 9,
-charging-time 7, all clean to axe, WAVE and Nu. A1 keeps that fixed; §6 proves it.
+charging-time 7, all clean to axe, WAVE and Nu. SC 1.1.1 keeps that fixed; §6 proves it.
 
 ---
 # 1. Semantics and naming
 
-### A1 — Every inline `<svg>` is either named or hidden
+### SC 1.1.1 — Every inline `<svg>` is either named or hidden
 
-`SC 1.1.1` · **Level A**
+**Level A**
 
 Chrome maps a bare `<svg>` to `role=image`, `name=""`, `ignored=false`: an unnamed graphic exposed
 to assistive technology. It is not "decorative by default".
@@ -75,18 +76,18 @@ export const Icon = ({ label, ...p }) =>
 
 ---
 
-### A2 — An icon-only control needs a real name, not a hidden one
+### SC 4.1.2, 2.4.4 — An icon-only control needs a real name, not a hidden one
 
-`SC 4.1.2, 2.4.4` · **Level A**
+**Level A**
 
 The control carries `aria-label`; the icon inside is `aria-hidden`. The name must sit on the thing
 that is focusable.
 
 ---
 
-### A3 — A `<select>` is named by `aria-labelledby`, split static from dynamic
+### SC 1.3.1, 2.5.3, 4.1.2 — A `<select>` is named by `aria-labelledby`, split static from dynamic
 
-`SC 1.3.1, 2.5.3, 4.1.2` · **Level A**
+**Level A**
 
 ```html
 <span id="select-veh-model-static">Model: </span><span id="select-veh-family">ID.7</span>
@@ -110,9 +111,9 @@ accessible name manufactures failures that do not exist.
 
 ---
 
-### A4 — The visible label sits inside the accessible name
+### SC 2.5.3 — The visible label sits inside the accessible name
 
-`SC 2.5.3` · **Level A**
+**Level A**
 
 The name must **contain the visible text, contiguously**, or a speech-input user cannot activate the
 control by saying what they see.
@@ -130,18 +131,18 @@ control by saying what they see.
 
 ---
 
-### A5 — One `h1`, no skipped levels, real landmarks
+### SC 1.3.1, 2.4.1, 2.4.6 — One `h1`, no skipped levels, real landmarks
 
-`SC 1.3.1, 2.4.1, 2.4.6` · **Level A / AA**
+**Level A / AA**
 
 One `h1`; heading levels descend without gaps; `role="banner"` on the topbar and a `<main>`; and a
 skip link as the **first** tab stop, pointing at an id that exists.
 
 ---
 
-### A6 — A visually hidden polite live region, updated on every path
+### SC 4.1.3 — A visually hidden polite live region, updated on every path
 
-`SC 4.1.3` · **Level AA**
+**Level AA**
 
 ```html
 <p id="nala-live" class="sr-only" aria-live="polite" aria-atomic="true"></p>
@@ -176,9 +177,9 @@ Three things, each load-bearing:
 
 ---
 
-### A7 — `lang` on the document, and on any passage that differs
+### SC 3.1.1, 3.1.2 — `lang` on the document, and on any passage that differs
 
-`SC 3.1.1, 3.1.2` · **Level A / AA**
+**Level A / AA**
 
 `<html lang="en">`. If a CMS field can hold a string in another language, the component rendering it
 must be able to emit `lang` alongside it.
@@ -186,18 +187,18 @@ must be able to emit `lang` alongside it.
 ---
 # 2. Keyboard and focus
 
-### B1 — Everything the mouse can do, the keyboard can do
+### SC 2.1.1 — Everything the mouse can do, the keyboard can do
 
-`SC 2.1.1` · **Level A**
+**Level A**
 
 Every control that is not a native `<button>`, `<a>`, `<select>` or `<input>` needs an explicit key
 handler. Assert the **state change**, not just that the handler fired.
 
 ---
 
-### B2 — A custom widget exposes role, name **and** value, on every path
+### SC 4.1.2 — A custom widget exposes role, name **and** value, on every path
 
-`SC 4.1.2` · **Level A**
+**Level A**
 
 The value must be written from every path that can change it — keyboard, drag, click-on-track:
 
@@ -217,18 +218,18 @@ The value must be written from every path that can change it — keyboard, drag,
 
 ---
 
-### B3 — Focus order matches visual order
+### SC 2.4.3 — Focus order matches visual order
 
-`SC 2.4.3` · **Level A**
+**Level A**
 
 Drive real `Tab` and assert `document.activeElement` at each stop. A control that moves visually at
 a breakpoint must move in the DOM too, not be repositioned with CSS `order`.
 
 ---
 
-### B4 — A visible focus indicator on every control, styled consistently
+### SC 2.4.7 — A visible focus indicator on every control, styled consistently
 
-`SC 2.4.7` · **Level AA**
+**Level AA**
 
 `outline: 2px solid #C86C03`, **no `outline-offset`**, on **every** focusable thing including skip
 links and inline links; a browser-default ring passes but looks inconsistent. Exception: the skip
@@ -247,9 +248,9 @@ behind a styled surrogate, ring the surrogate:
 
 ---
 
-### B5 — A focused control is never left under sticky chrome
+### SC 2.4.11 — A focused control is never left under sticky chrome
 
-`SC 2.4.11` · **Level AA**
+**Level AA**
 
 Use `scroll-padding-top` / `scroll-padding-bottom` equal to the fixed bars' height, or a `focusin`
 handler that scrolls the control clear. Measure the focused rect **after the scroll settles** — a
@@ -257,9 +258,9 @@ synchronous read after `.focus()` catches a smooth scroll mid-flight and reports
 
 ---
 
-### B6 — No keyboard trap
+### SC 2.1.2 — No keyboard trap
 
-`SC 2.1.2` · **Level A**
+**Level A**
 
 Tab must cycle through every stop and out the other side; disclosures and panels must be escapable.
 
@@ -272,16 +273,17 @@ the `.focus()` call is silently ignored.
 
 ---
 
-### B7 — A scrollable region is keyboard reachable
+### SC 2.1.1 — A scrollable region is keyboard reachable
 
-`SC 2.1.1` · **Level A** (ACT rule `0ssw9k`)
+**Level A** (ACT rule `0ssw9k`)
 
 A region that scrolls must be focusable so a keyboard user can scroll it: `tabindex="0"`.
 
 **Add `role="group"` and a name only for a landmark-like container**, never a scrollable paragraph:
 `#nala-range-modal-body` carries `tabindex="0"` and nothing else, deliberately. A `role="group"`
 there announces an extra grouping to descend into — the grouping that made a VoiceOver tester
-conclude the result panel was unreadable (`a11y-2` §9.1 row 5). Consistent with B8 item 4.
+conclude the result panel was unreadable (`a11y-2` §9.1 row 5). Consistent with SC 4.1.2, 2.4.3
+item 4.
 
 > **Two rules disagree by construction.** axe's experimental `focus-order-semantics` flags
 > `tabindex="0"` on a `role="group"`. It is `best-practice` + `experimental`, carries **no `wcag2*`
@@ -289,9 +291,9 @@ conclude the result panel was unreadable (`a11y-2` §9.1 row 5). Consistent with
 
 ---
 
-### B8 — A modal dialog announces its own content, not just its name
+### SC 4.1.2, 2.4.3 — A modal dialog announces its own content, not just its name
 
-`SC 4.1.2` · **Level A** · `SC 2.4.3` · **Level A**
+**Level A**
 
 The range info modal is the reference implementation. Five things hold together:
 
@@ -312,20 +314,21 @@ The range info modal is the reference implementation. Five things hold together:
    overlay itself.
 4. **Initial focus goes to the body copy, not the close button**: a reader announces the dialog's
    *name* on open but not its *content*, so the close button leaves the explanation unread.
-   `tabindex="0"` on the paragraph also makes it keyboard-scrollable (B7). **Do not add
-   `aria-describedby` to that same paragraph** — it would be announced twice.
+   `tabindex="0"` on the paragraph also makes it keyboard-scrollable (see "A scrollable region is
+   keyboard reachable" above). **Do not add `aria-describedby` to that same paragraph** — it would
+   be announced twice.
 5. **The trigger declares `aria-haspopup="dialog"` and no `aria-expanded`** — `aria-expanded`
    belongs to the disclosure pattern, and advertising an unmaintained state is worse than none.
 
 Escape, the close button and a backdrop click must all close it and restore focus to the trigger.
-B6 covers the `inert` half of the trap.
+SC 2.1.2 covers the `inert` half of the trap.
 
 ---
 # 3. Pointer and targets
 
-### C1 — Every target is at least 24×24 CSS px
+### SC 2.5.8 — Every target is at least 24×24 CSS px
 
-`SC 2.5.8` · **Level AA**
+**Level AA**
 
 > **axe will not catch this for you.** `target-size` is `enabled: false` by default in axe-core
 > 4.13.0, so a stock run reports "0 violations" without testing target size at all. Turn it on:
@@ -358,18 +361,18 @@ Centre-to-centre against a full-size neighbour is the wrong test and reads false
 
 ---
 
-### C2 — Activation happens on the up-event
+### SC 2.5.2 — Activation happens on the up-event
 
-`SC 2.5.2` · **Level A**
+**Level A**
 
 Native `<button>` gets this free. A custom control must fire on `pointerup`/`click`, never
 `pointerdown`, so a user can drag off to abort.
 
 ---
 
-### C3 — Dragging always has a non-drag alternative
+### SC 2.5.7 — Dragging always has a non-drag alternative
 
-`SC 2.5.7` · **Level AA**
+**Level AA**
 
 A draggable slider thumb must also respond to arrow keys, and ideally to a click on the track.
 Arrow keys alone satisfy the criterion.
@@ -377,9 +380,9 @@ Arrow keys alone satisfy the criterion.
 ---
 # 4. Visual
 
-### D1 — Text contrast ≥4.5:1, measured on composited pixels
+### SC 1.4.3 — Text contrast ≥4.5:1, measured on composited pixels
 
-`SC 1.4.3` · **Level AA**
+**Level AA**
 
 Over a gradient, an image or an overlapping element, axe returns **`incomplete`**, not a pass.
 Resolve those by hand, on real pixels:
@@ -395,17 +398,17 @@ Resolve those by hand, on real pixels:
 
 ---
 
-### D2 — Non-text contrast ≥3:1
+### SC 1.4.11 — Non-text contrast ≥3:1
 
-`SC 1.4.11` · **Level AA**
+**Level AA**
 
 Control boundaries, focus rings and selected-state indicators.
 
 ---
 
-### D3 — No content loss at 320×256 CSS px
+### SC 1.4.10, 1.4.4 — No content loss at 320×256 CSS px
 
-`SC 1.4.10, 1.4.4` · **Level AA**
+**Level AA**
 
 **400% zoom is `setDeviceMetricsOverride{ width:320, height:256, deviceScaleFactor:4 }`.**
 `dsf 1` is a small screen — a different test.
@@ -427,9 +430,9 @@ sticky).
 
 ---
 
-### D4 — The text-spacing overrides must not clip anything
+### SC 1.4.12 — The text-spacing overrides must not clip anything
 
-`SC 1.4.12` · **Level AA**
+**Level AA**
 
 ```css
 * { line-height:1.5 !important; letter-spacing:.12em !important; word-spacing:.16em !important; }
@@ -444,9 +447,9 @@ Nothing may newly clip, no control may be lost, no horizontal scroll may appear.
 
 ---
 
-### D5 — Never lock orientation
+### SC 1.3.4 — Never lock orientation
 
-`SC 1.3.4` · **Level AA**
+**Level AA**
 
 No `@media (orientation:)` rule that hides or restricts content.
 
@@ -463,7 +466,7 @@ No `@media (orientation:)` rule that hides or restricts content.
 4. **`useId()` for every label association** — hand-written ids collide once a component is placed
    twice on a page, and `duplicate-id-aria` is a real failure.
 5. **A CSS-in-JS `:focus-visible` must survive minification.** Verify the ring in the built bundle.
-6. **Icons: name or hide at the component boundary** (A1). A per-call-site decision will be missed.
+6. **Icons: name or hide at the component boundary** (SC 1.1.1). A per-call-site decision will be missed.
 7. **Live regions must mount before they are written to.** Render unconditionally; write on update.
 
 ---
@@ -520,7 +523,7 @@ trap does not apply to it — but reintroducing any visible-text-derived name re
 LayoutUnit snapping renders it as 23.797, so **both numbers are correct and neither is a typo.**
 `offsetWidth` rounds up to 24 and
 `getBoundingClientRect()` does not. It passes SC 2.5.8 comfortably because `::before` makes the real
-target ~36.0 × 36.0 (C1) and the nearest other target is 86.8px away. A manual DevTools check of the
+target ~36.0 × 36.0 (SC 2.5.8) and the nearest other target is 86.8px away. A manual DevTools check of the
 border box reads 23.8 and flags it, so the `::before` is load-bearing for the explanation though not
 for the pass. Do not remove it.
 
@@ -541,7 +544,8 @@ discovered.
 | **One car render, three variants** | `assets/` ships one image; `alt` describes only what is shown, so it stays accurate but cannot describe the selected variant. | Add one render per variant, assigning `src` and `alt` **together**. Never `alt` alone — the alternative would describe an image nobody is looking at (SC 1.1.1). |
 | **Dialog heading not announced** | Focus lands on the body copy, so a reader speaks the paragraph but not the `h2`. | **Leave it.** Focusing the container announces the heading and skips the paragraph — the defect the sibling Visualizer shipped. `aria-describedby` was rejected: the paragraph is 945 characters and long descriptions get truncated by some readers. If revisited, A/B by ear. |
 
-**Not open, and not to be reopened:** the split static/dynamic `aria-labelledby` naming scheme (A3),
-the empty-at-rest live region (A6), `inert` on the background while the dialog is open (B6), and
-the `::before` hit-area expansion on the info button (C1). Each replaced something that measurably failed; the
+**Not open, and not to be reopened:** the split static/dynamic `aria-labelledby` naming scheme
+(SC 1.3.1, 2.5.3, 4.1.2), the empty-at-rest live region (SC 4.1.3), `inert` on the background while
+the dialog is open (SC 2.1.2), and the `::before` hit-area expansion on the info button (SC 2.5.8).
+Each replaced something that measurably failed; the
 reasoning sits next to each rule so it is not undone by someone tidying up.

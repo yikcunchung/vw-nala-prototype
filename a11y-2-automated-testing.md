@@ -331,7 +331,7 @@ pass.** Where §9 has recorded an answer, the reasoning lives there.
 - [ ] **On value change** — exactly **one** announcement per change ("Estimated range 595 kilometres."), focus
       stays on the dropdown, count-up **never** read digit by digit.
 - [ ] **On modal open** — *"Estimated range, dialog"* **then the full explanatory paragraph.** The paragraph
-      **twice** would mean an `aria-describedby` has been added (`a11y-3` invariant B8).
+      **twice** would mean an `aria-describedby` has been added (`a11y-3`, SC 4.1.2, 2.4.3).
 - [ ] **Focus trap** — the virtual cursor must **never** reach the page behind the dialog. If it escapes,
       record **which reader and which key**.
 - [ ] **On modal close** — Escape, × and click-outside all close the dialog **and** return focus to the ⓘ

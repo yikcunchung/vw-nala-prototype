@@ -173,7 +173,7 @@ Target **Level A + AA**, per EN 301 549 clause 9, hence BFSG / the European Acce
 | SC | Name | Lvl | Relevant | Status | Evidence / what to do |
 |---|---|---|---|---|---|
 | **4.1.1** | Parsing | A | Yes | ✅ Pass | Nu HTML validator **0 errors**. Obsolete in WCAG 2.2 but normative under EN 301 549 clause 9.4.1.1, so kept deliberately. |
-| **4.1.2** | Name, Role, Value | A | Yes | ✅ Pass | 0 unnamed, **0 duplicate role+name**. Every `<select>` exposes role, name and value, and **the four names are stable — identical after changing all four values** (verified: `tests/invariants.spec.js` A3, resolving each `aria-labelledby` before and after changing every select). `#nala-cta` is a real `<a href>` exposing **`role=link`**; `#nala-info-btn` has `aria-haspopup="dialog"`; `#nala-range-modal` is `role="dialog"` + `aria-modal="true"` + `aria-labelledby`. **No `aria-expanded` anywhere.** |
+| **4.1.2** | Name, Role, Value | A | Yes | ✅ Pass | 0 unnamed, **0 duplicate role+name**. Every `<select>` exposes role, name and value, and **the four names are stable — identical after changing all four values** (verified: `tests/invariants.spec.js`'s name-stability tests, resolving each `aria-labelledby` before and after changing every select). `#nala-cta` is a real `<a href>` exposing **`role=link`**; `#nala-info-btn` has `aria-haspopup="dialog"`; `#nala-range-modal` is `role="dialog"` + `aria-modal="true"` + `aria-labelledby`. **No `aria-expanded` anywhere.** |
 | **4.1.3** | Status Messages | AA | Yes | ✅ Pass | `#nala-live` (`aria-live="polite"`) announces the recomputed range without moving focus: 600 → 595 km, driven. Empty at rest, cleared after 3000ms. |
 
 ---

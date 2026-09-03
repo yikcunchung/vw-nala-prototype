@@ -587,6 +587,7 @@ body {
 }
 #nala-disclaimer[hidden] { display: none; }
 #nala-disclaimer.is-open { opacity: 1; transform: translateY(0px); }
+#nala-disclaimer.highlighted { outline: 1.5px solid #997f67; }
 .nala-disclaimer-row {
   display: flex; align-items: stretch; min-height: 0;
 }
@@ -1095,6 +1096,22 @@ body {
      part of the page instead of as an update. */
   firstPaint = false;
 })();
+</script>
+<script>
+  (function() {
+    var badge = document.getElementById('nala-ref-badge-btn');
+    var panel = document.getElementById('nala-disclaimer');
+    if (!badge || !panel) return;
+    badge.addEventListener('click', function() {
+      if (panel.hidden) {
+        setTimeout(function() {
+          panel.classList.add('highlighted');
+          clearTimeout(panel._ht);
+          panel._ht = setTimeout(function() { panel.classList.remove('highlighted'); }, 2500);
+        }, 50);
+      }
+    });
+  })();
 </script>
 </body>
 </html>

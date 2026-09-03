@@ -312,12 +312,9 @@ body {
   min-width: 0;
 }
 .nala-readout { display: flex; flex-direction: column; align-items: center; }
-.nala-result-label {
-  display: flex;
-  gap: var(--nala-gap-info);               /* spacing dynamic/d0020 */
-  align-items: flex-start;
-  height: 24px;
-}
+/* Matches .result-headline-row in the simulators: flex row, centered, no gap —
+   spacing between label/badge/icon comes from their own box padding. */
+.nala-result-label { display: flex; align-items: center; }
 .nala-result-label-text {
   font-family: var(--font-text); font-weight: 700;
   font-size: 16px; line-height: 1.2; color: var(--white);
@@ -329,28 +326,17 @@ body {
   color: var(--white); white-space: nowrap;
 }
 
-/* Info button — .q-icon-btn pattern from range-simulator, recoloured for the
-   dark panel. The layout box is the Figma glyph box (23.803 x 24) so the Label
-   frame measures 142.8 exactly; ::before grows the hit area to 32x32 so the
-   target still clears SC 2.5.8 without disturbing the layout. */
+/* Info button — identical to .q-icon-btn in range-simulator (32x32 box, no
+   hit-area hack needed), recoloured white for the dark panel. */
 .q-icon-btn {
   position: relative; display: inline-flex; align-items: center; justify-content: center;
-  width: 23.803px; height: 24px; border-radius: 50%;
+  width: 32px; height: 32px; border-radius: 50%;
   color: var(--white); background: transparent; border: none; padding: 0;
-  cursor: pointer; flex-shrink: 0;
+  cursor: pointer; flex-shrink: 0; margin-left: 0;
   vertical-align: middle;
   -webkit-tap-highlight-color: transparent;
 }
-/* SC 2.5.8: a 32x32 circle only inscribes a 22.6px square, so corner probes at
-   (+-12,+-12) landed on the siblings behind it and the button passed only via the
-   Spacing exception. 36px inscribes 25.5px, clearing 24x24 outright. Transparent, so
-   nothing moves and nothing is repainted; nearest other target is 86.8px away. */
-.q-icon-btn::before {
-  content: ''; position: absolute;
-  top: -6px; bottom: -6px; left: -6.1px; right: -6.1px;
-  border-radius: 50%;
-}
-.q-icon { width: 23.803px; height: 24px; display: block; pointer-events: none; }
+.q-icon { width: 24px; height: 24px; display: block; pointer-events: none; }
 
 /* CTA — .cta-button from range-simulator, inverted for the dark panel */
 .nala-cta {
@@ -535,8 +521,9 @@ body {
 .nala-modal-title {
   font-family: var(--font-head);
   font-weight: 700;
-  font-size: 20px;
-  line-height: 1.2;
+  font-size: clamp(1.38rem, 1.22rem + 0.44vw, 1.75rem);
+  line-height: 120%;
+  letter-spacing: calc(-0.02em + 0.02rem);
   color: var(--navy);
 }
 .nala-modal-close {
@@ -565,6 +552,86 @@ body {
   background-color: rgb(255, 255, 255);
   padding: 0 min(4.16vw, 106.66px);
 }
+
+/* Reference badge — numbered footnote marker, dark theme (result card) */
+.ref-badge-wrapper { width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.ref-badge {
+  width: 16px; height: 16px; border-radius: 100px;
+  background: var(--border-light); border: none;
+  color: var(--navy); font-family: var(--font-text); font-size: 10px; font-weight: 400;
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 0; cursor: pointer; line-height: 1;
+}
+.ref-badge:hover, .ref-badge:active { background: #997F67; }
+.ref-badge:focus-visible { outline: 2px solid #C86C03; outline-offset: 2px; }
+
+/* Disclaimer panel — fixed to the viewport bottom, inset to match #nala-main's
+   own grid margin (calc(100vw / 12) each side) so its width lines up with
+   .nala-result exactly (verified: both resolve to the same left/right px at
+   1440 and 390 viewport widths). Top-corner radius kept as-is per request
+   rather than the live site's 0px. */
+#nala-disclaimer {
+  display: flex;
+  position: fixed; bottom: 0;
+  left: calc(100vw / 12); right: calc(100vw / 12);
+  flex-flow: column;
+  align-self: flex-end;
+  max-height: 40vh;
+  background-color: rgba(0, 0, 0, 0.85);
+  border-radius: 4px 4px 0 0;
+  box-shadow: rgba(9, 13, 24, 0.08) 0px 16px 56px 0px;
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 300ms, transform 300ms;
+  z-index: 1000;
+}
+#nala-disclaimer[hidden] { display: none; }
+#nala-disclaimer.is-open { opacity: 1; transform: translateY(0px); }
+.nala-disclaimer-row {
+  display: flex; align-items: stretch; min-height: 0;
+}
+.nala-disclaimer-body {
+  flex: 1 1 0; min-width: 0; min-height: 0;
+  padding: 16px 48px 16px 16px;
+  display: flex; flex-direction: column;
+}
+.nala-disclaimer-text {
+  display: grid; min-height: 0;
+  margin: 0; padding: 0;
+  grid-template-columns: max-content 1fr;
+  gap: 12px 8px;
+  color: rgb(255,255,255); word-break: break-word;
+}
+.nala-disclaimer-i {
+  align-self: end;
+  font-family: var(--font-text); font-weight: normal;
+  font-size: 0.88rem; line-height: 150%; letter-spacing: calc(-0.02em + 0.02rem);
+  color: rgb(255,255,255); padding-right: 16px;
+}
+/* Scrolls independently of the panel so .nala-disclaimer-close-wrap never
+   scrolls out of reach — matches visualizer's .label-group (overflow-y:auto
+   lives on the same element that carries tabindex=0, not an ancestor). */
+#nala-disclaimer-content {
+  overflow-y: auto; min-height: 0; max-height: calc(40vh - 32px);
+  scrollbar-width: thin;
+}
+#nala-disclaimer-content:focus-visible { outline: 2px solid #C86C03; outline-offset: 2px; }
+.nala-disclaimer-copy {
+  margin: unset;
+  font-family: var(--font-text); font-weight: normal;
+  font-size: 0.88rem; line-height: 150%; letter-spacing: calc(-0.02em + 0.02rem);
+  color: rgb(255,255,255);
+}
+.nala-disclaimer-close-wrap {
+  padding: 12px 12px 12px 0;
+  display: flex; align-items: flex-start; flex-shrink: 0; align-self: stretch;
+}
+.nala-disclaimer-close {
+  background: none; border: none; padding: 0; cursor: pointer;
+  width: 24px; height: 24px;
+  display: flex; align-items: center; justify-content: center;
+}
+.nala-disclaimer-close:focus-visible { outline: 2px solid #C86C03; outline-offset: 2px; }
 
 /* SC 2.3.3 — honour a reduced-motion preference */
 @media (prefers-reduced-motion: reduce) {
@@ -644,7 +711,7 @@ body {
     <!-- ── Top ── -->
     <div class="nala-top">
       <div class="nala-question">
-        <h1 class="nala-headline" id="nala-headline">What is the range&nbsp;&hellip;</h1>
+        <h2 class="nala-headline" id="nala-headline">What is the range&nbsp;&hellip;</h2>
 
         <div class="nala-sentence" role="group" aria-labelledby="nala-headline">
 
@@ -739,10 +806,11 @@ body {
         <div class="nala-readout">
           <div class="nala-result-label">
             <span class="nala-result-label-text">Estimated range</span>
+            <span class="ref-badge-wrapper"><button type="button" class="ref-badge" id="nala-ref-badge-btn" aria-label="See reference 13" aria-expanded="false" aria-controls="nala-disclaimer">13</button></span>
             <button type="button" class="q-icon-btn" id="nala-info-btn"
                     aria-haspopup="dialog"
                     aria-label="More information about the estimated range">
-              <svg class="q-icon" viewBox="0 0 23.803 24" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg"><g transform="translate(0.9926 1.0008)"><path fill-rule="evenodd" clip-rule="evenodd" d="M10.9096 0C4.58799 0 0 4.626 0 11C0 17.374 4.58799 22 10.9096 22C17.2312 22 21.8192 17.374 21.8192 11C21.8192 4.626 17.2312 0 10.9096 0ZM10.9096 1.33C16.4666 1.33 20.5002 5.397 20.5002 11C20.5002 16.603 16.4666 20.67 10.9096 20.67C5.35265 20.67 1.31907 16.603 1.31907 11C1.31907 5.397 5.35265 1.33 10.9096 1.33ZM10.9096 5.493C11.348 5.493 11.6772 5.788 11.6772 6.304C11.6772 6.82 11.348 7.115 10.9096 7.115C10.4712 7.115 10.142 6.82 10.142 6.304C10.142 5.788 10.4712 5.493 10.9096 5.493ZM11.6862 14.656V9.007H8.34486V10.337H10.3671V14.656H7.35804V15.986L14.2678 15.985V14.655L11.6862 14.656Z" fill="white"/></g></svg>
+              <svg class="q-icon" aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M20.67 11.999c0-4.841-3.339-8.67-8.67-8.669S3.33 7.159 3.33 12s3.339 8.67 8.67 8.67 8.67-3.83 8.67-8.671m-7.767 3.669H16v1.33H7.997v-1.33h3.576v-4.33h-2.07v-1.33h3.4zM12 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2m10 5.999c0 5.523-3.882 10-10 10.001S2 17.523 2 12 5.882 2 12 2s10 4.476 10 9.999"/></svg>
             </button>
           </div>
           <!-- The number is the app's headline output, so it must be readable on
@@ -773,6 +841,27 @@ body {
 
       <p class="nala-consumption" id="nala-consumption">Energy consumption combined 16.6 - 15.2 kWh/100 km 4  &bull;CO&#8322; emissions combined 0 g/km 4  &bull;CO&#8322; class A</p>
      </div><!-- /nala-result-row -->
+
+      <!-- Disclaimer overlay -->
+      <div id="nala-disclaimer" role="dialog" aria-label="Disclaimer" aria-modal="false" hidden>
+       <div class="nala-disclaimer-row">
+        <div class="nala-disclaimer-body">
+          <div class="nala-disclaimer-text">
+            <span class="nala-disclaimer-i">13.</span>
+            <div id="nala-disclaimer-content" tabindex="0" role="group" aria-label="Disclaimer details">
+              <p class="nala-disclaimer-copy">Range indication based on the selected parameters and average equipment. Actual range may vary.</p>
+            </div>
+          </div>
+        </div>
+        <div class="nala-disclaimer-close-wrap">
+          <button class="nala-disclaimer-close" id="nala-disclaimer-close" aria-label="Close Disclaimer">
+            <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path d="M20.9559 3.98495L20.0139 3.04395L11.9999 11.0589L3.98495 3.04395L3.04395 3.98495L11.0589 11.9999L3.04395 20.0149L3.98495 20.9559L11.9999 12.9409L20.0139 20.9559L20.9559 20.0149L12.9409 11.9999L20.9559 3.98495Z" fill="white"/>
+            </svg>
+          </button>
+        </div>
+       </div>
+      </div>
 
     </div>
 
@@ -955,6 +1044,50 @@ body {
   });
 
   [veh, env, wea, occ].forEach(function (s) { s.addEventListener('change', update); });
+
+  /* ── Disclaimer panel ── */
+  var disclaimerPanel = $('nala-disclaimer');
+  var disclaimerBadge = $('nala-ref-badge-btn');
+  var disclaimerClose = $('nala-disclaimer-close');
+  var disclaimerContent = $('nala-disclaimer-content');
+  var disclaimerOpener = null;
+
+  function openDisclaimer() {
+    disclaimerPanel.hidden = false;
+    requestAnimationFrame(function () {
+      disclaimerPanel.classList.add('is-open');
+    });
+    disclaimerBadge.setAttribute('aria-expanded', 'true');
+    disclaimerOpener = disclaimerBadge;
+    (disclaimerContent || disclaimerClose).focus();
+  }
+
+  function closeDisclaimer() {
+    if (disclaimerPanel.hidden) { return; }
+    var focusWasInside = disclaimerPanel.contains(document.activeElement);
+    disclaimerPanel.classList.remove('is-open');
+    disclaimerBadge.setAttribute('aria-expanded', 'false');
+    var done = false;
+    function finish() {
+      if (done) { return; }
+      done = true;
+      disclaimerPanel.hidden = true;
+      if (focusWasInside && disclaimerOpener) { disclaimerOpener.focus(); }
+      disclaimerOpener = null;
+    }
+    disclaimerPanel.addEventListener('transitionend', finish, { once: true });
+    setTimeout(finish, 350); /* fallback if transition fires before listener attaches */
+  }
+
+  disclaimerBadge.addEventListener('click', function () {
+    if (disclaimerPanel.hidden) { openDisclaimer(); } else { closeDisclaimer(); }
+  });
+
+  disclaimerClose.addEventListener('click', closeDisclaimer);
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && !disclaimerPanel.hidden) { closeDisclaimer(); }
+  });
 
   update();
   /* Nothing above this line may announce: on load there is no change to report,
